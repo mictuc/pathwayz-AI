@@ -7,11 +7,6 @@
 import random
 from copy import copy, deepcopy
 
-# Initialize the board to empty
-board = [['-' for i in range(12)] for j in range(8)]
-# Initializes first player to be white
-currentPlayer = 'w'
-
 def printBoard(board):
     # Prints out board in console
     header = ' '
@@ -86,10 +81,10 @@ def isWinner(board, player):
 
 def playPiece(board, row, col, permanent, player):
     if not (row < 8 and row >= 0 and col < 12 and col >= 0):
-        print('Row, column out of bounds')
+        print('Row, column out of bounds.')
         return False
     elif not emptyPlace(board, row, col):
-        print('Position is already played')
+        print('Position is already played.')
         return False
     elif permanent:
         board[row][col] = otherPlayer(player).upper()
@@ -137,42 +132,51 @@ def fullBoard(board):
     return True
 
 
+def playPathwayz(board, currentPlayer):
+    while(True):
 
-while(True):
+        # row,col,permanent = randomMove(board)
 
-    # row,col,permanent = randomMove(board)
+        if currentPlayer == 'b':
+            row = -1
+            while not (row < 8 and row >= 0):
+                row = (raw_input('Enter row '))
+                if row.isdigit():
+                    row = int(row) - 1
+            col = -1
+            while col == -1:
+                colInput = (raw_input('Enter column '))
+                if colInput.isalpha() and ord(colInput.lower()) >= ord('a') and ord(colInput.lower()) <= ord('l'):
+                    col = ord(colInput.lower()) - ord('a')
+            permanentInput = ''
+            while not (permanentInput == 'y' or permanentInput == 'n'):
+                permanentInput = raw_input('Permanent? (y/n) ')
+            permanent = permanentInput == 'y'
+        else:
+            row,col,permanent = baselineMove(board, currentPlayer)
 
-    if currentPlayer == 'b':
-        row = -1
-        while not (row < 8 and row >= 0):
-            row = (raw_input('Enter row '))
-            if row.isdigit():
-                row = int(row) - 1
-        col = -1
-        while col == -1:
-            colInput = (raw_input('Enter column '))
-            if colInput.isalpha() and ord(colInput.lower()) >= ord('a') and ord(colInput.lower()) <= ord('l'):
-                col = ord(colInput.lower()) - ord('a')
-        permanentInput = ''
-        while not (permanentInput == 'y' or permanentInput == 'n'):
-            permanentInput = raw_input('Permanent? (y/n) ')
-        permanent = permanentInput == 'y'
-    else:
-        row,col,permanent = baselineMove(board, currentPlayer)
+        if playPiece(board, row, col, permanent, currentPlayer):
+            permanentOutput = 'permanent' if permanent else 'regular'
+            playLocation = '(%d,%c)' % (row+1, chr(ord('A')+col))
+            print('Player %s put a %s piece at %s') % (currentPlayer, permanentOutput, playLocation)
+            printBoard(board)
+            if isWinner(board, currentPlayer):
+                print('Player %s wins!!!' % currentPlayer)
+                break
+            elif isWinner(board, otherPlayer(currentPlayer)):
+                print('Player %s player wins!!!' % otherPlayer(currentPlayer))
+                break
+            elif fullBoard(board):
+                print 'Board is full...'
+                break
+            currentPlayer = otherPlayer(currentPlayer)
+            print('Player %s\'s turn' % currentPlayer)
 
-    if playPiece(board, row, col, permanent, currentPlayer):
-        permanentOutput = 'permanent' if permanent else 'regular'
-        playLocation = '(%d,%c)' % (row+1, chr(ord('A')+col))
-        print('Player %s put a %s piece at %s') % (currentPlayer, permanentOutput, playLocation)
-        printBoard(board)
-        if isWinner(board, currentPlayer):
-            print('Player %s wins!!!' % currentPlayer)
-            break
-        elif isWinner(board, otherPlayer(currentPlayer)):
-            print('Player %s player wins!!!' % otherPlayer(currentPlayer))
-            break
-        elif fullBoard(board):
-            print 'Board is full...'
-            break
-        currentPlayer = otherPlayer(currentPlayer)
-        print('Player %s\'s turn' % currentPlayer)
+
+if __name__ == '__main__':
+    # Initialize the board to empty
+    board = [['-' for i in range(12)] for j in range(8)]
+    # Initializes first player to be white
+    currentPlayer = 'w'
+    # Play the game
+    playPathwayz(board, currentPlayer)
