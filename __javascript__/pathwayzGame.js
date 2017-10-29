@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-10-29 13:54:14
+// Transcrypt'ed from Python, 2017-10-29 15:52:46
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -2791,6 +2791,21 @@ function pathwayzGame () {
 				self.succ (tuple ([tempBoard, player]), tuple ([row, col, permanent]));
 				return self.longestPath (tempBoard, player);
 			});},
+			get simulatedMove2 () {return __get__ (this, function (self, state, action) {
+				var __left0__ = state;
+				var board = __left0__ [0];
+				var player = __left0__ [1];
+				var tempBoard = function () {
+					var __accu0__ = [];
+					var __iterable0__ = board;
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var row = __iterable0__ [__index0__];
+						__accu0__.append (row.__getslice__ (0, null, 1));
+					}
+					return __accu0__;
+				} ();
+				return self.succ (tuple ([tempBoard, player]), action);
+			});},
 			get simulatedAdvancedMove () {return __get__ (this, function (self, board, permanent, row, col, player) {
 				var tempBoard = function () {
 					var __accu0__ = [];
@@ -2803,6 +2818,80 @@ function pathwayzGame () {
 				} ();
 				self.succ (tuple ([tempBoard, player]), tuple ([row, col, permanent]));
 				return self.longestPath (tempBoard, player) - 0.4 * self.longestPath (tempBoard, self.otherPlayer (player));
+			});},
+			get countPieces () {return __get__ (this, function (self, board, player) {
+				var myNumPermanents = 0;
+				var yourNumPermanents = 0;
+				var myNum1EmptyNeighbor = 0;
+				var yourNum1EmptyNeighbor = 0;
+				var myNum2EmptyNeighbor = 0;
+				var yourNum2EmptyNeighbor = 0;
+				var myNumPieces = 0;
+				var yourNumPieces = 0;
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == player.upper ()) {
+						myNumPermanents++;
+						myNumPieces++;
+					}
+					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
+						yourNumPermanents++;
+						yourNumPieces++;
+					}
+					else if (board [i] [j] == player) {
+						myNumPieces++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							myNumPermanents++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							myNum1EmptyNeighbor++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							myNum2EmptyNeighbor++;
+						}
+					}
+					else if (board [i] [j] == self.otherPlayer (player)) {
+						yourNumPieces++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							yourNumPermanents++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							yourNum1EmptyNeighbor++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							yourNum2EmptyNeighbor++;
+						}
+					}
+				}
+				return tuple ([myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces - yourNumPieces]);
+			});},
+			get getNumEmptyNeighbors () {return __get__ (this, function (self, row, col, board) {
+				var neighbors = self.surroundingPlaces (row, col);
+				var numEmptyNeighbors = 0;
+				var __iterable0__ = neighbors;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var neighbor = __iterable0__ [__index0__];
+					var __left0__ = neighbor;
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == '-') {
+						numEmptyNeighbors++;
+					}
+				}
+				return numEmptyNeighbors;
 			});}
 		});
 		var game = PathwayzGame ();
@@ -2815,10 +2904,11 @@ function pathwayzGame () {
 			var player = __left0__ [1];
 			var bestPath = 0;
 			var options = list ([]);
-			var __iterable0__ = game.actions (state);
+			var actions = game.actions (state);
+			var __iterable0__ = actions;
 			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 				var action = __iterable0__ [__index0__];
-				var newState = game.succ (state, action);
+				var newState = game.simulatedMove2 (state, action);
 				var __left0__ = newState;
 				var newBoard = __left0__ [0];
 				var _ = __left0__ [1];
@@ -2879,11 +2969,143 @@ function pathwayzGame () {
 			}
 			return random.choice (options);
 		};
+		var value = function (game, state, depth, alpha, beta, originalPlayer) {
+			if (game.isEnd (state) || depth == 0) {
+				if (originalPlayer) {
+					return evaluationFunction (game, state);
+				}
+				else {
+					return -(evaluationFunction (game, state));
+				}
+			}
+			else if (originalPlayer) {
+				var highestScore = -(float ('inf'));
+				var __iterable0__ = game.actions (state);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var action = __iterable0__ [__index0__];
+					var score = value (game, game.simulatedMove2 (state, action), depth - 1, alpha, beta, false);
+					var highestScore = MAX (list ([highestScore, score]));
+					var alpha = MAX (list ([alpha, highestScore]));
+					if (beta <= alpha) {
+						break;
+					}
+				}
+				return highestScore;
+			}
+			else {
+				var lowestScore = float ('inf');
+				var __iterable0__ = game.actions (state);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var action = __iterable0__ [__index0__];
+					var score = value (game, game.simulatedMove2 (state, action), depth - 1, alpha, beta, true);
+					var lowestScore = MIN (list ([lowestScore, score]));
+					var beta = MIN (list ([beta, lowestScore]));
+					if (beta <= alpha) {
+						break;
+					}
+				}
+				return lowestScore;
+			}
+		};
+		var MAX = function (array) {
+			var currMax = -(float ('inf'));
+			var __iterable0__ = array;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var x = __iterable0__ [__index0__];
+				if (x > currMax) {
+					var currMax = x;
+				}
+			}
+			return currMax;
+		};
+		var MIN = function (array) {
+			var currMin = float ('inf');
+			var __iterable0__ = array;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var x = __iterable0__ [__index0__];
+				if (x < currMin) {
+					var currMin = x;
+				}
+			}
+			return currMin;
+		};
+		var minimax = function (game, state) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			var tempBoard = function () {
+				var __accu0__ = [];
+				var __iterable0__ = board;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var row = __iterable0__ [__index0__];
+					__accu0__.append (row.__getslice__ (0, null, 1));
+				}
+				return __accu0__;
+			} ();
+			var legalMoves = game.actions (state);
+			var scores = function () {
+				var __accu0__ = [];
+				var __iterable0__ = legalMoves;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var action = __iterable0__ [__index0__];
+					__accu0__.append (value (game, game.simulatedMove2 (tuple ([tempBoard, player]), action), 1, -(float ('inf')), float ('inf'), false));
+				}
+				return __accu0__;
+			} ();
+			var bestScore = MAX (scores);
+			print (bestScore);
+			print (scores);
+			var bestIndices = function () {
+				var __accu0__ = [];
+				for (var index = 0; index < len (scores); index++) {
+					if (scores [index] == bestScore) {
+						__accu0__.append (index);
+					}
+				}
+				return __accu0__;
+			} ();
+			var chosenIndex = random.choice (bestIndices);
+			print (legalMoves);
+			print (chosenIndex);
+			return legalMoves [chosenIndex];
+		};
+		var featureExtractor = function (game, state) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			var myLongestPath = game.longestPath (board, player);
+			var yourLongestPath = game.longestPath (board, game.otherPlayer (player));
+			var __left0__ = game.countPieces (board, player);
+			var myNumPermanents = __left0__ [0];
+			var yourNumPermanents = __left0__ [1];
+			var myNum1EmptyNeighbor = __left0__ [2];
+			var yourNum1EmptyNeighbor = __left0__ [3];
+			var myNum2EmptyNeighbor = __left0__ [4];
+			var yourNum2EmptyNeighbor = __left0__ [5];
+			var differenceNumPieces = __left0__ [6];
+			return list ([myLongestPath, yourLongestPath, myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces]);
+		};
+		var evaluationFunction = function (game, state) {
+			var features = featureExtractor (game, state);
+			var weights = list ([20, -(8), 3, -(3), -(0.5), 0.5, 0.5, -(0.5), 2]);
+			var results = function () {
+				var __accu0__ = [];
+				var __iterable0__ = zip (features, weights);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					__accu0__.append (i * j);
+				}
+				return __accu0__;
+			} ();
+			return sum (results);
+		};
 		var GameManager = __class__ ('GameManager', [object], {
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
-				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove});
+				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': minimax});
 				self.displayBoard ();
 			});},
 			get setPlayers () {return __get__ (this, function (self) {
@@ -2905,6 +3127,13 @@ function pathwayzGame () {
 				var player = self.game.player (self.state);
 				var policy = self.policy [player];
 				var action = policy (self.game, self.state);
+				var __left0__ = action;
+				var i = __left0__ [0];
+				var j = __left0__ [1];
+				var pem = __left0__ [2];
+				print (i);
+				print (j);
+				print (pem);
 				self.state = game.succ (self.state, action);
 				self.displayBoard (self.coordinatesToSqNo (action));
 				if (self.game.isEnd (self.state)) {
@@ -3031,7 +3260,7 @@ function pathwayzGame () {
 			});},
 			get setStartMenuText () {return __get__ (this, function (self) {
 				document.getElementById ('modaltitle').innerHTML = 'Setup Game';
-				document.getElementById ('modalInformation').innerHTML = '<h2>Player 1</h2><br><select class="soflow" id="player1"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option></select><input type="text" style="display: inline;" id="player1name" value="Player 1"><br><h2>Player 2</h2><br><select class="soflow" id="player2"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option></select><input type="text" style="display: inline;" id="player2name" value="Player 2"><br><a href="#" onclick="closeModal(); pathwayzGame.gameManager.setPlayers();">Start Game</a></div>';
+				document.getElementById ('modalInformation').innerHTML = '<h2>Player 1</h2><br><select class="soflow" id="player1"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type="text" style="display: inline;" id="player1name" value="Player 1"><br><h2>Player 2</h2><br><select class="soflow" id="player2"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type="text" style="display: inline;" id="player2name" value="Player 2"><br><a href="#" onclick="closeModal(); pathwayzGame.gameManager.setPlayers();">Start Game</a></div>';
 			});},
 			get displayWinner () {return __get__ (this, function (self, player) {
 				self.setWinText (player);
@@ -3056,12 +3285,18 @@ function pathwayzGame () {
 		'</use>')
 		__pragma__ ('<all>')
 			__all__.GameManager = GameManager;
+			__all__.MAX = MAX;
+			__all__.MIN = MIN;
 			__all__.PathwayzGame = PathwayzGame;
 			__all__.advancedBaselineMove = advancedBaselineMove;
 			__all__.baselineMove = baselineMove;
+			__all__.evaluationFunction = evaluationFunction;
+			__all__.featureExtractor = featureExtractor;
 			__all__.game = game;
 			__all__.gameManager = gameManager;
+			__all__.minimax = minimax;
 			__all__.randomMove = randomMove;
+			__all__.value = value;
 		__pragma__ ('</all>')
 	}) ();
    return __all__;

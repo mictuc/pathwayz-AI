@@ -133,10 +133,60 @@ class PathwayzGame:
         self.succ((tempBoard, player), (row, col, permanent))
         return self.longestPath(tempBoard, player)
 
+    def simulatedMove2(self, state, action):
+        board, player = state
+        tempBoard = [row[:] for row in board]
+        return self.succ((tempBoard, player), action)
+
     def simulatedAdvancedMove(self, board, permanent, row, col, player):
         tempBoard = [row[:] for row in board]
         self.succ((tempBoard, player), (row, col, permanent))
         return self.longestPath(tempBoard, player)-0.4*self.longestPath(tempBoard, self.otherPlayer(player))
+
+    def countPieces(self, board, player):
+        myNumPermanents = 0
+        yourNumPermanents = 0
+        myNum1EmptyNeighbor = 0
+        yourNum1EmptyNeighbor = 0
+        myNum2EmptyNeighbor = 0
+        yourNum2EmptyNeighbor = 0
+        myNumPieces = 0
+        yourNumPieces = 0
+        for i,j in [(i, j) for j in range(12) for i in range(8)]:
+            if board[i][j] == player.upper():
+                myNumPermanents += 1
+                myNumPieces += 1
+            elif board[i][j] == self.otherPlayer(player).upper():
+                yourNumPermanents += 1
+                yourNumPieces += 1
+            elif board[i][j] == player:
+                myNumPieces += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    myNumPermanents += 1
+                elif numEmptyNeighbors == 1:
+                    myNum1EmptyNeighbor += 1
+                elif numEmptyNeighbors == 2:
+                    myNum2EmptyNeighbor += 1
+            elif board[i][j] == self.otherPlayer(player):
+                yourNumPieces += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    yourNumPermanents += 1
+                elif numEmptyNeighbors == 1:
+                    yourNum1EmptyNeighbor += 1
+                elif numEmptyNeighbors == 2:
+                    yourNum2EmptyNeighbor += 1
+        return (myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces-yourNumPieces)
+
+    def getNumEmptyNeighbors(self, row, col, board):
+        neighbors = self.surroundingPlaces(row, col)
+        numEmptyNeighbors = 0
+        for neighbor in neighbors:
+            i, j = neighbor
+            if board[i][j] == '-':
+                numEmptyNeighbors += 1
+        return numEmptyNeighbors
 
 game = PathwayzGame()
 
@@ -145,12 +195,12 @@ def randomMove(game, state):
     return random.choice(game.actions(state))
 
 def baselineMove(game, state):
-    #TODO FIX THIS...
     _, player = state
     bestPath = 0
     options = []
-    for action in game.actions(state):
-        newState = game.succ(state, action)
+    actions = game.actions(state)
+    for action in actions:
+        newState = game.simulatedMove2(state, action)
         newBoard, _ = newState
         newPathLength = game.longestPath(newBoard, player)
         if newPathLength > bestPath:
@@ -186,13 +236,99 @@ def advancedBaselineMove(game, state):
         return randomMove(game, state)
     return random.choice(options)
 
+def value(game, state, depth, alpha, beta, originalPlayer):
+    if game.isEnd(state) or depth == 0:
+        if originalPlayer:
+            return evaluationFunction(game, state)
+        else:
+            return -evaluationFunction(game, state)
+    elif originalPlayer:
+        highestScore = -float('inf')
+        for action in game.actions(state):
+            score = value(game, game.simulatedMove2(state, action), depth-1, alpha, beta, False)
+            highestScore = MAX([highestScore, score])
+            alpha = MAX([alpha, highestScore])
+            if beta <= alpha:
+                break
+        return highestScore
+    else:
+        lowestScore = float('inf')
+        for action in game.actions(state):
+            score = value(game, game.simulatedMove2(state, action), depth-1, alpha, beta, True)
+            lowestScore = MIN([lowestScore, score])
+            beta = MIN([beta, lowestScore])
+            if beta <= alpha:
+                break
+        return lowestScore
+
+
+def MAX(array):
+    currMax = -float('inf')
+    for x in array:
+        if x > currMax:
+            currMax = x
+    return currMax
+
+def MIN(array):
+    currMin = float('inf')
+    for x in array:
+        if x < currMin:
+            currMin = x
+    return currMin
+
+def minimax(game, state):
+    # Collect legal moves and successor states
+    board, player = state
+    tempBoard = [row[:] for row in board]
+    legalMoves = game.actions(state)
+    scores = [value(game, game.simulatedMove2((tempBoard, player), action), 1, -float('inf'), float('inf'), False) for action in legalMoves]
+    bestScore = MAX(scores)
+    print(bestScore)
+    print(scores)
+    bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+    chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+    print(legalMoves)
+    print(chosenIndex)
+    return legalMoves[chosenIndex]
+
+
+def featureExtractor(game, state):
+    board, player = state
+    myLongestPath = game.longestPath(board, player)
+    yourLongestPath = game.longestPath(board, game.otherPlayer(player))
+    myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces = game.countPieces(board, player)
+    return [myLongestPath, yourLongestPath, myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces]
+
+def evaluationFunction(game, state):
+    features = featureExtractor(game, state)
+    weights = [20,-8,3,-3,-.5,.5,.5,-.5,2]
+    results = ([i*j for (i, j) in zip(features, weights)])
+    return sum(results)
+
 class GameManager():
     def __init__(self):
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':minimax}
         self.displayBoard()
+
+        # testBoard = [['-' for i in range(12)] for j in range(8)]
+        # testBoard[0][0] = 'w'
+        # testBoard[0][1] = 'w'
+        # testBoard[1][2] = 'w'
+        #
+        # testBoard[1][0] = 'b'
+        # testBoard[1][1] = 'b'
+        #
+        # testBoard[5][5] = 'W'
+        # testBoard[5][6] = 'W'
+        # testBoard[6][5] = 'B'
+        # testBoard[6][6] = 'B'
+        #
+        # featureExtractor(game,(testBoard,'w'))
+        # print(evaluationFunction(game,(testBoard,'w')))
+
 
     def setPlayers(self):
         # Initializes player policies and names
@@ -213,6 +349,10 @@ class GameManager():
         player = self.game.player(self.state)
         policy = self.policy[player]
         action = policy(self.game, self.state)
+        i,j,pem = action
+        print(i)
+        print(j)
+        print(pem)
         self.state = game.succ(self.state, action)
         self.displayBoard(self.coordinatesToSqNo(action))
         if self.game.isEnd(self.state):
@@ -314,7 +454,7 @@ class GameManager():
     def setStartMenuText(self):
         # Sets modal up for start menu
     	document.getElementById("modaltitle").innerHTML = "Setup Game";
-    	document.getElementById("modalInformation").innerHTML = "<h2>Player 1</h2><br><select class=\"soflow\" id=\"player1\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option></select><input type=\"text\" style=\"display: inline;\" id=\"player1name\" value=\"Player 1\"><br><h2>Player 2</h2><br><select class=\"soflow\" id=\"player2\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option></select><input type=\"text\" style=\"display: inline;\" id=\"player2name\" value=\"Player 2\"><br><a href=\"#\" onclick=\"closeModal(); pathwayzGame.gameManager.setPlayers();\">Start Game</a></div>";
+    	document.getElementById("modalInformation").innerHTML = "<h2>Player 1</h2><br><select class=\"soflow\" id=\"player1\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type=\"text\" style=\"display: inline;\" id=\"player1name\" value=\"Player 1\"><br><h2>Player 2</h2><br><select class=\"soflow\" id=\"player2\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type=\"text\" style=\"display: inline;\" id=\"player2name\" value=\"Player 2\"><br><a href=\"#\" onclick=\"closeModal(); pathwayzGame.gameManager.setPlayers();\">Start Game</a></div>";
 
     def displayWinner(self, player):
         # Displays winner modal in the GUI
