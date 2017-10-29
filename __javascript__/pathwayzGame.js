@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-10-29 15:52:46
+// Transcrypt'ed from Python, 2017-10-29 16:14:06
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3053,8 +3053,6 @@ function pathwayzGame () {
 				return __accu0__;
 			} ();
 			var bestScore = MAX (scores);
-			print (bestScore);
-			print (scores);
 			var bestIndices = function () {
 				var __accu0__ = [];
 				for (var index = 0; index < len (scores); index++) {
@@ -3065,8 +3063,45 @@ function pathwayzGame () {
 				return __accu0__;
 			} ();
 			var chosenIndex = random.choice (bestIndices);
-			print (legalMoves);
-			print (chosenIndex);
+			return legalMoves [chosenIndex];
+		};
+		var advancedMinimax = function (game, state) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			var tempBoard = function () {
+				var __accu0__ = [];
+				var __iterable0__ = board;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var row = __iterable0__ [__index0__];
+					__accu0__.append (row.__getslice__ (0, null, 1));
+				}
+				return __accu0__;
+			} ();
+			var legalMoves = game.actions (state);
+			var piecesPlayed = 96 - 0.5 * len (legalMoves);
+			var depth = int (piecesPlayed / 20);
+			print (depth);
+			var scores = function () {
+				var __accu0__ = [];
+				var __iterable0__ = legalMoves;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var action = __iterable0__ [__index0__];
+					__accu0__.append (value (game, game.simulatedMove2 (tuple ([tempBoard, player]), action), depth, -(float ('inf')), float ('inf'), false));
+				}
+				return __accu0__;
+			} ();
+			var bestScore = MAX (scores);
+			var bestIndices = function () {
+				var __accu0__ = [];
+				for (var index = 0; index < len (scores); index++) {
+					if (scores [index] == bestScore) {
+						__accu0__.append (index);
+					}
+				}
+				return __accu0__;
+			} ();
+			var chosenIndex = random.choice (bestIndices);
 			return legalMoves [chosenIndex];
 		};
 		var featureExtractor = function (game, state) {
@@ -3105,7 +3140,7 @@ function pathwayzGame () {
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
-				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': minimax});
+				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax});
 				self.displayBoard ();
 			});},
 			get setPlayers () {return __get__ (this, function (self) {
@@ -3127,13 +3162,6 @@ function pathwayzGame () {
 				var player = self.game.player (self.state);
 				var policy = self.policy [player];
 				var action = policy (self.game, self.state);
-				var __left0__ = action;
-				var i = __left0__ [0];
-				var j = __left0__ [1];
-				var pem = __left0__ [2];
-				print (i);
-				print (j);
-				print (pem);
 				self.state = game.succ (self.state, action);
 				self.displayBoard (self.coordinatesToSqNo (action));
 				if (self.game.isEnd (self.state)) {
@@ -3289,6 +3317,7 @@ function pathwayzGame () {
 			__all__.MIN = MIN;
 			__all__.PathwayzGame = PathwayzGame;
 			__all__.advancedBaselineMove = advancedBaselineMove;
+			__all__.advancedMinimax = advancedMinimax;
 			__all__.baselineMove = baselineMove;
 			__all__.evaluationFunction = evaluationFunction;
 			__all__.featureExtractor = featureExtractor;

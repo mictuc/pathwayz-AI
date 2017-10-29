@@ -261,7 +261,6 @@ def value(game, state, depth, alpha, beta, originalPlayer):
                 break
         return lowestScore
 
-
 def MAX(array):
     currMax = -float('inf')
     for x in array:
@@ -283,12 +282,22 @@ def minimax(game, state):
     legalMoves = game.actions(state)
     scores = [value(game, game.simulatedMove2((tempBoard, player), action), 1, -float('inf'), float('inf'), False) for action in legalMoves]
     bestScore = MAX(scores)
-    print(bestScore)
-    print(scores)
     bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
     chosenIndex = random.choice(bestIndices) # Pick randomly among the best
-    print(legalMoves)
-    print(chosenIndex)
+    return legalMoves[chosenIndex]
+
+def advancedMinimax(game, state):
+    # Collect legal moves and successor states
+    board, player = state
+    tempBoard = [row[:] for row in board]
+    legalMoves = game.actions(state)
+    piecesPlayed = 96 - 0.5 * len(legalMoves)
+    depth = int(piecesPlayed / 20)
+    print(depth)
+    scores = [value(game, game.simulatedMove2((tempBoard, player), action), depth, -float('inf'), float('inf'), False) for action in legalMoves]
+    bestScore = MAX(scores)
+    bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+    chosenIndex = random.choice(bestIndices) # Pick randomly among the best
     return legalMoves[chosenIndex]
 
 
@@ -310,25 +319,8 @@ class GameManager():
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':minimax}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax}
         self.displayBoard()
-
-        # testBoard = [['-' for i in range(12)] for j in range(8)]
-        # testBoard[0][0] = 'w'
-        # testBoard[0][1] = 'w'
-        # testBoard[1][2] = 'w'
-        #
-        # testBoard[1][0] = 'b'
-        # testBoard[1][1] = 'b'
-        #
-        # testBoard[5][5] = 'W'
-        # testBoard[5][6] = 'W'
-        # testBoard[6][5] = 'B'
-        # testBoard[6][6] = 'B'
-        #
-        # featureExtractor(game,(testBoard,'w'))
-        # print(evaluationFunction(game,(testBoard,'w')))
-
 
     def setPlayers(self):
         # Initializes player policies and names
@@ -349,10 +341,6 @@ class GameManager():
         player = self.game.player(self.state)
         policy = self.policy[player]
         action = policy(self.game, self.state)
-        i,j,pem = action
-        print(i)
-        print(j)
-        print(pem)
         self.state = game.succ(self.state, action)
         self.displayBoard(self.coordinatesToSqNo(action))
         if self.game.isEnd(self.state):
