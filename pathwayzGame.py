@@ -128,20 +128,10 @@ class PathwayzGame:
                 return 12
         return longestPath + 1
 
-    def simulatedMove(self, board, permanent, row, col, player):
-        tempBoard = [row[:] for row in board]
-        self.succ((tempBoard, player), (row, col, permanent))
-        return self.longestPath(tempBoard, player)
-
-    def simulatedMove2(self, state, action):
+    def simulatedMove(self, state, action):
         board, player = state
         tempBoard = [row[:] for row in board]
         return self.succ((tempBoard, player), action)
-
-    def simulatedAdvancedMove(self, board, permanent, row, col, player):
-        tempBoard = [row[:] for row in board]
-        self.succ((tempBoard, player), (row, col, permanent))
-        return self.longestPath(tempBoard, player)-0.4*self.longestPath(tempBoard, self.otherPlayer(player))
 
     def countPieces(self, board, player):
         myNumPermanents = 0
@@ -200,7 +190,7 @@ def baselineMove(game, state):
     options = []
     actions = game.actions(state)
     for action in actions:
-        newState = game.simulatedMove2(state, action)
+        newState = game.simulatedMove(state, action)
         newBoard, _ = newState
         newPathLength = game.longestPath(newBoard, player)
         if newPathLength > bestPath:
@@ -213,25 +203,19 @@ def baselineMove(game, state):
     return random.choice(options)
 
 def advancedBaselineMove(game, state):
-    board, player = state
-    bestPath = 0
+    _, player = state
+    bestScore = 0
     options = []
-    for i,j in [(i, j) for i in range(8) for j in range(12)]:
-        if game.emptyPlace(state, i, j):
-            # try regular piece
-            newPath = game.simulatedAdvancedMove(board, False, i, j, player)
-            if newPath > bestPath:
-                bestPath = newPath
-                options = [(i, j, False)]
-            elif newPath == bestPath:
-                options.append((i, j, False))
-            # try permanent piece
-            newPath = game.simulatedAdvancedMove(board, True, i, j, player)
-            if newPath > bestPath:
-                bestPath = newPath
-                options = [(i, j, True)]
-            elif newPath == bestPath:
-                options.append((i, j, True))
+    actions = game.actions(state)
+    for action in actions:
+        newState = game.simulatedMove(state, action)
+        newBoard, _ = newState
+        newScore = game.longestPath(newBoard, player) - 0.4 * game.longestPath(newBoard, game.otherPlayer(player))
+        if newScore > bestScore:
+            bestScore = newScore
+            options = [action]
+        elif newScore == bestScore:
+            options.append(action)
     if len(options) == 0:
         return randomMove(game, state)
     return random.choice(options)
@@ -245,7 +229,7 @@ def value(game, state, depth, alpha, beta, originalPlayer):
     elif originalPlayer:
         highestScore = -float('inf')
         for action in game.actions(state):
-            score = value(game, game.simulatedMove2(state, action), depth-1, alpha, beta, False)
+            score = value(game, game.simulatedMove(state, action), depth-1, alpha, beta, False)
             highestScore = MAX([highestScore, score])
             alpha = MAX([alpha, highestScore])
             if beta <= alpha:
@@ -254,7 +238,7 @@ def value(game, state, depth, alpha, beta, originalPlayer):
     else:
         lowestScore = float('inf')
         for action in game.actions(state):
-            score = value(game, game.simulatedMove2(state, action), depth-1, alpha, beta, True)
+            score = value(game, game.simulatedMove(state, action), depth-1, alpha, beta, True)
             lowestScore = MIN([lowestScore, score])
             beta = MIN([beta, lowestScore])
             if beta <= alpha:
@@ -280,7 +264,7 @@ def minimax(game, state):
     board, player = state
     tempBoard = [row[:] for row in board]
     legalMoves = game.actions(state)
-    scores = [value(game, game.simulatedMove2((tempBoard, player), action), 1, -float('inf'), float('inf'), False) for action in legalMoves]
+    scores = [value(game, game.simulatedMove((tempBoard, player), action), 1, -float('inf'), float('inf'), False) for action in legalMoves]
     bestScore = MAX(scores)
     bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
     chosenIndex = random.choice(bestIndices) # Pick randomly among the best
@@ -294,7 +278,7 @@ def advancedMinimax(game, state):
     piecesPlayed = 96 - 0.5 * len(legalMoves)
     depth = int(piecesPlayed / 20)
     print(depth)
-    scores = [value(game, game.simulatedMove2((tempBoard, player), action), depth, -float('inf'), float('inf'), False) for action in legalMoves]
+    scores = [value(game, game.simulatedMove((tempBoard, player), action), depth, -float('inf'), float('inf'), False) for action in legalMoves]
     bestScore = MAX(scores)
     bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
     chosenIndex = random.choice(bestIndices) # Pick randomly among the best

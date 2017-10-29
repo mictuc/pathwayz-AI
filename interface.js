@@ -1,5 +1,4 @@
 window.onload = function() {
-  startMenu();
 	openModal();
 };
 
@@ -36,12 +35,6 @@ function onResize() {
 function aboutText() {
 	document.getElementById("modaltitle").innerHTML = "About PathwayzAI";
 	document.getElementById("modalInformation").innerHTML = "<p>PathwayzAI is a web app that lets you play the board game Pathwayz in the browser. It is still under development. Coming soon: computer AI!</p><a href=\"#\" onclick=\"closeModal();\">Close</a></div>";
-}
-
-function startMenu() {
-	document.getElementById("modaltitle").innerHTML = "Setup Game";
-	// openModal();
-	// document.getElementById("modalInformation").innerHTML = "<select class=\"soflow\" id=\"player1\"><option>Select Player 1</option><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option></select><input type=\"text\" style=\"display: inline;\" name=\"player1name\" value=\"Player 1\"><br><select class=\"soflow\" id=\"player2\"><option>Select Player 2</option><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option></select><input type=\"text\" style=\"display: inline;\" name=\"player2name\" value=\"Player 2\"><br><a href=\"#\" onclick=\"closeModal(); testFunction();\">Start Game</a></div>";
 }
 
 function openModal() {

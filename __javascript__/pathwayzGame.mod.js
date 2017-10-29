@@ -244,20 +244,7 @@
 				}
 				return longestPath + 1;
 			});},
-			get simulatedMove () {return __get__ (this, function (self, board, permanent, row, col, player) {
-				var tempBoard = function () {
-					var __accu0__ = [];
-					var __iterable0__ = board;
-					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-						var row = __iterable0__ [__index0__];
-						__accu0__.append (row.__getslice__ (0, null, 1));
-					}
-					return __accu0__;
-				} ();
-				self.succ (tuple ([tempBoard, player]), tuple ([row, col, permanent]));
-				return self.longestPath (tempBoard, player);
-			});},
-			get simulatedMove2 () {return __get__ (this, function (self, state, action) {
+			get simulatedMove () {return __get__ (this, function (self, state, action) {
 				var __left0__ = state;
 				var board = __left0__ [0];
 				var player = __left0__ [1];
@@ -271,19 +258,6 @@
 					return __accu0__;
 				} ();
 				return self.succ (tuple ([tempBoard, player]), action);
-			});},
-			get simulatedAdvancedMove () {return __get__ (this, function (self, board, permanent, row, col, player) {
-				var tempBoard = function () {
-					var __accu0__ = [];
-					var __iterable0__ = board;
-					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-						var row = __iterable0__ [__index0__];
-						__accu0__.append (row.__getslice__ (0, null, 1));
-					}
-					return __accu0__;
-				} ();
-				self.succ (tuple ([tempBoard, player]), tuple ([row, col, permanent]));
-				return self.longestPath (tempBoard, player) - 0.4 * self.longestPath (tempBoard, self.otherPlayer (player));
 			});},
 			get countPieces () {return __get__ (this, function (self, board, player) {
 				var myNumPermanents = 0;
@@ -374,7 +348,7 @@
 			var __iterable0__ = actions;
 			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 				var action = __iterable0__ [__index0__];
-				var newState = game.simulatedMove2 (state, action);
+				var newState = game.simulatedMove (state, action);
 				var __left0__ = newState;
 				var newBoard = __left0__ [0];
 				var _ = __left0__ [1];
@@ -394,40 +368,25 @@
 		};
 		var advancedBaselineMove = function (game, state) {
 			var __left0__ = state;
-			var board = __left0__ [0];
+			var _ = __left0__ [0];
 			var player = __left0__ [1];
-			var bestPath = 0;
+			var bestScore = 0;
 			var options = list ([]);
-			var __iterable0__ = function () {
-				var __accu0__ = [];
-				for (var i = 0; i < 8; i++) {
-					for (var j = 0; j < 12; j++) {
-						__accu0__.append (tuple ([i, j]));
-					}
-				}
-				return __accu0__;
-			} ();
+			var actions = game.actions (state);
+			var __iterable0__ = actions;
 			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-				var __left0__ = __iterable0__ [__index0__];
-				var i = __left0__ [0];
-				var j = __left0__ [1];
-				if (game.emptyPlace (state, i, j)) {
-					var newPath = game.simulatedAdvancedMove (board, false, i, j, player);
-					if (newPath > bestPath) {
-						var bestPath = newPath;
-						var options = list ([tuple ([i, j, false])]);
-					}
-					else if (newPath == bestPath) {
-						options.append (tuple ([i, j, false]));
-					}
-					var newPath = game.simulatedAdvancedMove (board, true, i, j, player);
-					if (newPath > bestPath) {
-						var bestPath = newPath;
-						var options = list ([tuple ([i, j, true])]);
-					}
-					else if (newPath == bestPath) {
-						options.append (tuple ([i, j, true]));
-					}
+				var action = __iterable0__ [__index0__];
+				var newState = game.simulatedMove (state, action);
+				var __left0__ = newState;
+				var newBoard = __left0__ [0];
+				var _ = __left0__ [1];
+				var newScore = game.longestPath (newBoard, player) - 0.4 * game.longestPath (newBoard, game.otherPlayer (player));
+				if (newScore > bestScore) {
+					var bestScore = newScore;
+					var options = list ([action]);
+				}
+				else if (newScore == bestScore) {
+					options.append (action);
 				}
 			}
 			if (len (options) == 0) {
@@ -449,7 +408,7 @@
 				var __iterable0__ = game.actions (state);
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var action = __iterable0__ [__index0__];
-					var score = value (game, game.simulatedMove2 (state, action), depth - 1, alpha, beta, false);
+					var score = value (game, game.simulatedMove (state, action), depth - 1, alpha, beta, false);
 					var highestScore = MAX (list ([highestScore, score]));
 					var alpha = MAX (list ([alpha, highestScore]));
 					if (beta <= alpha) {
@@ -463,7 +422,7 @@
 				var __iterable0__ = game.actions (state);
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var action = __iterable0__ [__index0__];
-					var score = value (game, game.simulatedMove2 (state, action), depth - 1, alpha, beta, true);
+					var score = value (game, game.simulatedMove (state, action), depth - 1, alpha, beta, true);
 					var lowestScore = MIN (list ([lowestScore, score]));
 					var beta = MIN (list ([beta, lowestScore]));
 					if (beta <= alpha) {
@@ -514,7 +473,7 @@
 				var __iterable0__ = legalMoves;
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var action = __iterable0__ [__index0__];
-					__accu0__.append (value (game, game.simulatedMove2 (tuple ([tempBoard, player]), action), 1, -(float ('inf')), float ('inf'), false));
+					__accu0__.append (value (game, game.simulatedMove (tuple ([tempBoard, player]), action), 1, -(float ('inf')), float ('inf'), false));
 				}
 				return __accu0__;
 			} ();
@@ -553,7 +512,7 @@
 				var __iterable0__ = legalMoves;
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var action = __iterable0__ [__index0__];
-					__accu0__.append (value (game, game.simulatedMove2 (tuple ([tempBoard, player]), action), depth, -(float ('inf')), float ('inf'), false));
+					__accu0__.append (value (game, game.simulatedMove (tuple ([tempBoard, player]), action), depth, -(float ('inf')), float ('inf'), false));
 				}
 				return __accu0__;
 			} ();
