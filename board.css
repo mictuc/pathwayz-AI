@@ -1,0 +1,23 @@
+.board{
+  display: inline-block;
+  border: 1px solid black;
+}
+
+.square{
+  float: left;
+  width: 11.1vw;
+  height: 11.1vw;
+  text-align: center;
+}
+
+.light {
+  background-color: #DEB887;
+}
+
+.dark{
+  background-color: #CD853F;
+}
+
+.row{
+  clear: left;
+}
