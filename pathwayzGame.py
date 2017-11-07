@@ -34,8 +34,15 @@ class PathwayzGame:
 
 
     def utility(self, state):
+        # Takes in a state and returns inf if player is winner, -inf if player
+        # is loser, or 0 for draw
         board, player = state
-        # TODO
+        if self.isWinner(state, player):
+            return float('inf')
+        elif self.isWinner(state, self.otherPlayer(player)):
+            return -float('inf')
+        else:
+            return 0
 
     def actions(self, state):
         # Returns all valid moves for the given state
@@ -221,11 +228,12 @@ def advancedBaselineMove(game, state):
     return random.choice(options)
 
 def value(game, state, depth, alpha, beta, originalPlayer):
+    board, player = state
     if game.isEnd(state) or depth == 0:
         if originalPlayer:
-            return evaluationFunction(game, state)
+            return evaluationFunction(game, board, player)
         else:
-            return -evaluationFunction(game, state)
+            return -evaluationFunction(game, board, player)
     elif originalPlayer:
         highestScore = -float('inf')
         for action in game.actions(state):
@@ -276,7 +284,7 @@ def advancedMinimax(game, state):
     tempBoard = [row[:] for row in board]
     legalMoves = game.actions(state)
     piecesPlayed = 96 - 0.5 * len(legalMoves)
-    depth = int(piecesPlayed / 20)
+    depth = int(piecesPlayed / 30)
     print(depth)
     scores = [value(game, game.simulatedMove((tempBoard, player), action), depth, -float('inf'), float('inf'), False) for action in legalMoves]
     bestScore = MAX(scores)
@@ -284,17 +292,53 @@ def advancedMinimax(game, state):
     chosenIndex = random.choice(bestIndices) # Pick randomly among the best
     return legalMoves[chosenIndex]
 
+def shuffle(array):
+    currentIndex = len(array)
+    while 0 != currentIndex:
+        randomIndex = int(random.random() * currentIndex)
+        currentIndex -= 1
+        tempValue = array[currentIndex]
+        array[currentIndex] = array[randomIndex]
+        array[randomIndex] = tempValue
+    return array
 
-def featureExtractor(game, state):
+def beamScores(game, state, depth, beamWidth):
     board, player = state
+    if game.isEnd(state) or depth == 0:
+        return [(evaluationFunction(game, board, player), None, state)]
+    actions = shuffle(game.actions(state))
+    scores = []
+    newStates = []
+    for action in actions:
+        newBoard, newPlayer = game.simulatedMove(state, action)
+        newStates.append((newBoard, newPlayer))
+        scores.append(evaluationFunction(game, newBoard, player))
+
+    topScores = sorted(zip(scores, actions, newStates), key=lambda score: score[0], reverse=True)[:beamWidth]
+    newTopScores = []
+    for score, action, newState in topScores:
+        _, _, lastState = sorted(beamScores(game, newState, depth-1, beamWidth), key=lambda score: score[0], reverse=True)[0]
+        newTopScores.append((evaluationFunction(game, lastState[0], player), action, lastState))
+    return newTopScores
+
+def beamMinimax(game, state):
+    depth = 3
+    beamWidth = 5
+    scores = beamScores(game, state, depth, beamWidth)
+    _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
+    return bestMove
+
+def featureExtractor(game, board, player):
     myLongestPath = game.longestPath(board, player)
     yourLongestPath = game.longestPath(board, game.otherPlayer(player))
     myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces = game.countPieces(board, player)
     return [myLongestPath, yourLongestPath, myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces]
 
-def evaluationFunction(game, state):
-    features = featureExtractor(game, state)
-    weights = [20,-8,3,-3,-.5,.5,.5,-.5,2]
+def evaluationFunction(game, board, player):
+    if game.isEnd((board,player)):
+        return game.utility((board,player))
+    features = featureExtractor(game, board, player)
+    weights = [20,-8,3,-6,-0.5,0.5,0.5,-0.5,2]
     results = ([i*j for (i, j) in zip(features, weights)])
     return sum(results)
 
@@ -303,7 +347,7 @@ class GameManager():
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax}
         self.displayBoard()
 
     def setPlayers(self):
@@ -426,7 +470,7 @@ class GameManager():
     def setStartMenuText(self):
         # Sets modal up for start menu
     	document.getElementById("modaltitle").innerHTML = "Setup Game";
-    	document.getElementById("modalInformation").innerHTML = "<h2>Player 1</h2><br><select class=\"soflow\" id=\"player1\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type=\"text\" style=\"display: inline;\" id=\"player1name\" value=\"Player 1\"><br><h2>Player 2</h2><br><select class=\"soflow\" id=\"player2\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type=\"text\" style=\"display: inline;\" id=\"player2name\" value=\"Player 2\"><br><a href=\"#\" onclick=\"closeModal(); pathwayzGame.gameManager.setPlayers();\">Start Game</a></div>";
+    	document.getElementById("modalInformation").innerHTML = "<h2>Player 1</h2><br><select class=\"soflow\" id=\"player1\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type=\"text\" style=\"display: inline;\" id=\"player1name\" value=\"Player 1\"><br><h2>Player 2</h2><br><select class=\"soflow\" id=\"player2\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option></select><input type=\"text\" style=\"display: inline;\" id=\"player2name\" value=\"Player 2\"><br><a href=\"#\" onclick=\"closeModal(); pathwayzGame.gameManager.setPlayers();\">Start Game</a></div>";
 
     def displayWinner(self, player):
         # Displays winner modal in the GUI

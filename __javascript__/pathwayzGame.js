@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-10-29 16:46:41
+// Transcrypt'ed from Python, 2017-11-07 14:14:44
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -2585,6 +2585,15 @@ function pathwayzGame () {
 				var __left0__ = state;
 				var board = __left0__ [0];
 				var player = __left0__ [1];
+				if (self.isWinner (state, player)) {
+					return float ('inf');
+				}
+				else if (self.isWinner (state, self.otherPlayer (player))) {
+					return -(float ('inf'));
+				}
+				else {
+					return 0;
+				}
 			});},
 			get actions () {return __get__ (this, function (self, state) {
 				var __left0__ = state;
@@ -2929,12 +2938,15 @@ function pathwayzGame () {
 			return random.choice (options);
 		};
 		var value = function (game, state, depth, alpha, beta, originalPlayer) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
 			if (game.isEnd (state) || depth == 0) {
 				if (originalPlayer) {
-					return evaluationFunction (game, state);
+					return evaluationFunction (game, board, player);
 				}
 				else {
-					return -(evaluationFunction (game, state));
+					return -(evaluationFunction (game, board, player));
 				}
 			}
 			else if (originalPlayer) {
@@ -3039,7 +3051,7 @@ function pathwayzGame () {
 			} ();
 			var legalMoves = game.actions (state);
 			var piecesPlayed = 96 - 0.5 * len (legalMoves);
-			var depth = int (piecesPlayed / 20);
+			var depth = int (piecesPlayed / 30);
 			print (depth);
 			var scores = function () {
 				var __accu0__ = [];
@@ -3063,10 +3075,69 @@ function pathwayzGame () {
 			var chosenIndex = random.choice (bestIndices);
 			return legalMoves [chosenIndex];
 		};
-		var featureExtractor = function (game, state) {
+		var shuffle = function (array) {
+			var currentIndex = len (array);
+			while (0 != currentIndex) {
+				var randomIndex = int (random.random () * currentIndex);
+				currentIndex--;
+				var tempValue = array [currentIndex];
+				array [currentIndex] = array [randomIndex];
+				array [randomIndex] = tempValue;
+			}
+			return array;
+		};
+		var beamScores = function (game, state, depth, beamWidth) {
 			var __left0__ = state;
 			var board = __left0__ [0];
 			var player = __left0__ [1];
+			if (game.isEnd (state) || depth == 0) {
+				return list ([tuple ([evaluationFunction (game, board, player), null, state])]);
+			}
+			var actions = shuffle (game.actions (state));
+			var scores = list ([]);
+			var newStates = list ([]);
+			var __iterable0__ = actions;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var action = __iterable0__ [__index0__];
+				var __left0__ = game.simulatedMove (state, action);
+				var newBoard = __left0__ [0];
+				var newPlayer = __left0__ [1];
+				newStates.append (tuple ([newBoard, newPlayer]));
+				scores.append (evaluationFunction (game, newBoard, player));
+			}
+			var topScores = sorted (zip (scores, actions, newStates), __kwargtrans__ ({key: (function __lambda__ (score) {
+				return score [0];
+			}), reverse: true})).__getslice__ (0, beamWidth, 1);
+			var newTopScores = list ([]);
+			var __iterable0__ = topScores;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var __left0__ = __iterable0__ [__index0__];
+				var score = __left0__ [0];
+				var action = __left0__ [1];
+				var newState = __left0__ [2];
+				var __left0__ = sorted (beamScores (game, newState, depth - 1, beamWidth), __kwargtrans__ ({key: (function __lambda__ (score) {
+					return score [0];
+				}), reverse: true})) [0];
+				var _ = __left0__ [0];
+				var _ = __left0__ [1];
+				var lastState = __left0__ [2];
+				newTopScores.append (tuple ([evaluationFunction (game, lastState [0], player), action, lastState]));
+			}
+			return newTopScores;
+		};
+		var beamMinimax = function (game, state) {
+			var depth = 3;
+			var beamWidth = 5;
+			var scores = beamScores (game, state, depth, beamWidth);
+			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
+				return score [0];
+			}), reverse: true})) [0];
+			var _ = __left0__ [0];
+			var bestMove = __left0__ [1];
+			var _ = __left0__ [2];
+			return bestMove;
+		};
+		var featureExtractor = function (game, board, player) {
 			var myLongestPath = game.longestPath (board, player);
 			var yourLongestPath = game.longestPath (board, game.otherPlayer (player));
 			var __left0__ = game.countPieces (board, player);
@@ -3079,9 +3150,12 @@ function pathwayzGame () {
 			var differenceNumPieces = __left0__ [6];
 			return list ([myLongestPath, yourLongestPath, myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces]);
 		};
-		var evaluationFunction = function (game, state) {
-			var features = featureExtractor (game, state);
-			var weights = list ([20, -(8), 3, -(3), -(0.5), 0.5, 0.5, -(0.5), 2]);
+		var evaluationFunction = function (game, board, player) {
+			if (game.isEnd (tuple ([board, player]))) {
+				return game.utility (tuple ([board, player]));
+			}
+			var features = featureExtractor (game, board, player);
+			var weights = list ([20, -(8), 3, -(6), -(0.5), 0.5, 0.5, -(0.5), 2]);
 			var results = function () {
 				var __accu0__ = [];
 				var __iterable0__ = zip (features, weights);
@@ -3099,7 +3173,7 @@ function pathwayzGame () {
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
-				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax});
+				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax});
 				self.displayBoard ();
 			});},
 			get setPlayers () {return __get__ (this, function (self) {
@@ -3247,7 +3321,7 @@ function pathwayzGame () {
 			});},
 			get setStartMenuText () {return __get__ (this, function (self) {
 				document.getElementById ('modaltitle').innerHTML = 'Setup Game';
-				document.getElementById ('modalInformation').innerHTML = '<h2>Player 1</h2><br><select class="soflow" id="player1"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type="text" style="display: inline;" id="player1name" value="Player 1"><br><h2>Player 2</h2><br><select class="soflow" id="player2"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type="text" style="display: inline;" id="player2name" value="Player 2"><br><a href="#" onclick="closeModal(); pathwayzGame.gameManager.setPlayers();">Start Game</a></div>';
+				document.getElementById ('modalInformation').innerHTML = '<h2>Player 1</h2><br><select class="soflow" id="player1"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type="text" style="display: inline;" id="player1name" value="Player 1"><br><h2>Player 2</h2><br><select class="soflow" id="player2"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option></select><input type="text" style="display: inline;" id="player2name" value="Player 2"><br><a href="#" onclick="closeModal(); pathwayzGame.gameManager.setPlayers();">Start Game</a></div>';
 			});},
 			get displayWinner () {return __get__ (this, function (self, player) {
 				self.setWinText (player);
@@ -3278,12 +3352,15 @@ function pathwayzGame () {
 			__all__.advancedBaselineMove = advancedBaselineMove;
 			__all__.advancedMinimax = advancedMinimax;
 			__all__.baselineMove = baselineMove;
+			__all__.beamMinimax = beamMinimax;
+			__all__.beamScores = beamScores;
 			__all__.evaluationFunction = evaluationFunction;
 			__all__.featureExtractor = featureExtractor;
 			__all__.game = game;
 			__all__.gameManager = gameManager;
 			__all__.minimax = minimax;
 			__all__.randomMove = randomMove;
+			__all__.shuffle = shuffle;
 			__all__.value = value;
 		__pragma__ ('</all>')
 	}) ();
