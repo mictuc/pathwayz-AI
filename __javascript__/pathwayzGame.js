@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-07 14:14:44
+// Transcrypt'ed from Python, 2017-11-07 20:57:30
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3086,6 +3086,18 @@ function pathwayzGame () {
 			}
 			return array;
 		};
+		var oneMoveAway = function (game, board, player) {
+			var actions = game.actions (tuple ([board, player]));
+			var winningActions = list ([]);
+			var __iterable0__ = actions;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var action = __iterable0__ [__index0__];
+				if (game.isWinner (game.simulatedMove (tuple ([board, player]), action), player)) {
+					return true;
+				}
+			}
+			return false;
+		};
 		var beamScores = function (game, state, depth, beamWidth) {
 			var __left0__ = state;
 			var board = __left0__ [0];
@@ -3126,8 +3138,17 @@ function pathwayzGame () {
 			return newTopScores;
 		};
 		var beamMinimax = function (game, state) {
-			var depth = 3;
-			var beamWidth = 5;
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			if (oneMoveAway (game, board, game.otherPlayer (player))) {
+				var depth = 2;
+				var beamWidth = null;
+			}
+			else {
+				var depth = 3;
+				var beamWidth = 5;
+			}
 			var scores = beamScores (game, state, depth, beamWidth);
 			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
 				return score [0];
@@ -3155,7 +3176,7 @@ function pathwayzGame () {
 				return game.utility (tuple ([board, player]));
 			}
 			var features = featureExtractor (game, board, player);
-			var weights = list ([20, -(8), 3, -(6), -(0.5), 0.5, 0.5, -(0.5), 2]);
+			var weights = list ([20, -(10), 3, -(6), -(0.5), 0.5, 0.5, -(0.5), 2]);
 			var results = function () {
 				var __accu0__ = [];
 				var __iterable0__ = zip (features, weights);
@@ -3359,6 +3380,7 @@ function pathwayzGame () {
 			__all__.game = game;
 			__all__.gameManager = gameManager;
 			__all__.minimax = minimax;
+			__all__.oneMoveAway = oneMoveAway;
 			__all__.randomMove = randomMove;
 			__all__.shuffle = shuffle;
 			__all__.value = value;

@@ -302,6 +302,15 @@ def shuffle(array):
         array[randomIndex] = tempValue
     return array
 
+def oneMoveAway(game, board, player):
+    actions = game.actions((board, player))
+    winningActions = []
+    for action in actions:
+        if game.isWinner(game.simulatedMove((board, player), action), player):
+            return True
+    return False
+
+
 def beamScores(game, state, depth, beamWidth):
     board, player = state
     if game.isEnd(state) or depth == 0:
@@ -322,8 +331,13 @@ def beamScores(game, state, depth, beamWidth):
     return newTopScores
 
 def beamMinimax(game, state):
-    depth = 3
-    beamWidth = 5
+    board, player = state
+    if oneMoveAway(game, board, game.otherPlayer(player)):
+        depth = 2
+        beamWidth = None
+    else:
+        depth = 3
+        beamWidth = 5
     scores = beamScores(game, state, depth, beamWidth)
     _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
     return bestMove
@@ -338,7 +352,7 @@ def evaluationFunction(game, board, player):
     if game.isEnd((board,player)):
         return game.utility((board,player))
     features = featureExtractor(game, board, player)
-    weights = [20,-8,3,-6,-0.5,0.5,0.5,-0.5,2]
+    weights = [20,-10,3,-6,-0.5,0.5,0.5,-0.5,2]
     results = ([i*j for (i, j) in zip(features, weights)])
     return sum(results)
 
