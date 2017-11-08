@@ -182,5 +182,11 @@
 			</div>
 		<div class="overlay"></div>
 	</div>
+	<script>
+	function checkAIsTurn() {
+		pathwayzGame.gameManager.AITurn();
+	}
+	var int=setInterval(checkAIsTurn,1000);
+	</script>
 </body>
 </html>

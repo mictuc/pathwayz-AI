@@ -310,20 +310,20 @@ def oneMoveAway(game, board, player):
             return True
     return False
 
-
 def beamScores(game, state, depth, beamWidth):
     board, player = state
     if game.isEnd(state) or depth == 0:
         return [(evaluationFunction(game, board, player), None, state)]
     actions = shuffle(game.actions(state))
-    scores = []
+    topScores = [(-float('inf'), None, None) for i in range(beamWidth[depth-1])]
     newStates = []
     for action in actions:
         newBoard, newPlayer = game.simulatedMove(state, action)
-        newStates.append((newBoard, newPlayer))
-        scores.append(evaluationFunction(game, newBoard, player))
-
-    topScores = sorted(zip(scores, actions, newStates), key=lambda score: score[0], reverse=True)[:beamWidth]
+        newScore = evaluationFunction(game, newBoard, player)
+        minScore = sorted(topScores, key=lambda score: score[0])[0]
+        if newScore > minScore[0]:
+            topScores.remove(minScore)
+            topScores.append((newScore, action, (newBoard, newPlayer)))
     newTopScores = []
     for score, action, newState in topScores:
         _, _, lastState = sorted(beamScores(game, newState, depth-1, beamWidth), key=lambda score: score[0], reverse=True)[0]
@@ -334,10 +334,10 @@ def beamMinimax(game, state):
     board, player = state
     if oneMoveAway(game, board, game.otherPlayer(player)):
         depth = 2
-        beamWidth = None
+        beamWidth = [None, None]
     else:
         depth = 3
-        beamWidth = 5
+        beamWidth = [1, 5, 15]
     scores = beamScores(game, state, depth, beamWidth)
     _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
     return bestMove
@@ -363,6 +363,7 @@ class GameManager():
         self.state = game.startState()
         self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax}
         self.displayBoard()
+        self.isAI = {'w':False, 'b':False}
 
     def setPlayers(self):
         # Initializes player policies and names
@@ -373,13 +374,14 @@ class GameManager():
         self.playerNames = {'w':player1Name, 'b':player2Name}
         self.isAI = {'w':player1Policy!='Human', 'b':player2Policy!='Human'}
         self.policy = {'w':self.policies[player1Policy], 'b':self.policies[player2Policy]}
-        # If player 1 is an AI, it will take its turn
-        if self.isAI[self.game.player(self.state)]:
-            self.AITurn()
+        # # If player 1 is an AI, it will take its turn
+        # if self.isAI[self.game.player(self.state)]:
+        #     self.AITurn()
 
     def AITurn(self):
         # Make's AI's move
-        if self.game.isEnd(self.state): return
+        if not self.isAI[self.state[1]] or self.game.isEnd(self.state):
+            return
         player = self.game.player(self.state)
         policy = self.policy[player]
         action = policy(self.game, self.state)
@@ -392,8 +394,8 @@ class GameManager():
                 self.displayWinner(self.game.otherPlayer(player))
             else:
                 self.displayDraw()
-        elif self.isAI[self.game.player(self.state)]:
-            self.AITurn()
+        # elif self.isAI[self.game.player(self.state)]:
+        #     self.AITurn()
 
     def humanMove(self, sqNo):
         # Takes in the square number selected by the player and if able, plays
@@ -419,8 +421,8 @@ class GameManager():
                 self.displayWinner(self.game.otherPlayer(player))
             else:
                 self.displayDraw()
-        elif self.isAI[self.game.player(self.state)]:
-            self.AITurn()
+        # elif self.isAI[self.game.player(self.state)]:
+        #     self.AITurn()
 
     def coordinatesToSqNo(self, action):
         # Takes in an action and returns corresponding square number
