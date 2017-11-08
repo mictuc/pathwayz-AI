@@ -38,9 +38,9 @@ class PathwayzGame:
         # is loser, or 0 for draw
         board, player = state
         if self.isWinner(state, player):
-            return float('inf')
+            return 1e+6
         elif self.isWinner(state, self.otherPlayer(player)):
-            return -float('inf')
+            return -1e+6
         else:
             return 0
 
@@ -349,11 +349,11 @@ def featureExtractor(game, board, player):
     return [myLongestPath, yourLongestPath, myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces]
 
 def evaluationFunction(game, board, player):
-    if game.isEnd((board,player)):
-        return game.utility((board,player))
     features = featureExtractor(game, board, player)
     weights = [20,-8,3,-6,-0.5,0.5,0.5,-0.5,2]
     results = ([i*j for (i, j) in zip(features, weights)])
+    if game.isEnd((board,player)):
+        return game.utility((board,player)) + sum(results)
     return sum(results)
 
 class GameManager():

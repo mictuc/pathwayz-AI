@@ -52,10 +52,10 @@
 				var board = __left0__ [0];
 				var player = __left0__ [1];
 				if (self.isWinner (state, player)) {
-					return float ('inf');
+					return 1000000.0;
 				}
 				else if (self.isWinner (state, self.otherPlayer (player))) {
-					return -(float ('inf'));
+					return -(1000000.0);
 				}
 				else {
 					return 0;
@@ -638,11 +638,8 @@
 			return list ([myLongestPath, yourLongestPath, myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces]);
 		};
 		var evaluationFunction = function (game, board, player) {
-			if (game.isEnd (tuple ([board, player]))) {
-				return game.utility (tuple ([board, player]));
-			}
 			var features = featureExtractor (game, board, player);
-			var weights = list ([20, -(10), 3, -(6), -(0.5), 0.5, 0.5, -(0.5), 2]);
+			var weights = list ([20, -(8), 3, -(6), -(0.5), 0.5, 0.5, -(0.5), 2]);
 			var results = function () {
 				var __accu0__ = [];
 				var __iterable0__ = zip (features, weights);
@@ -654,6 +651,9 @@
 				}
 				return __accu0__;
 			} ();
+			if (game.isEnd (tuple ([board, player]))) {
+				return game.utility (tuple ([board, player])) + sum (results);
+			}
 			return sum (results);
 		};
 		var GameManager = __class__ ('GameManager', [object], {
