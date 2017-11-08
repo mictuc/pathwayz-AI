@@ -352,7 +352,7 @@ def evaluationFunction(game, board, player):
     if game.isEnd((board,player)):
         return game.utility((board,player))
     features = featureExtractor(game, board, player)
-    weights = [20,-10,3,-6,-0.5,0.5,0.5,-0.5,2]
+    weights = [20,-8,3,-6,-0.5,0.5,0.5,-0.5,2]
     results = ([i*j for (i, j) in zip(features, weights)])
     return sum(results)
 
