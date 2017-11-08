@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-08 10:17:59
+// Transcrypt'ed from Python, 2017-11-08 10:38:08
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3106,9 +3106,13 @@ function pathwayzGame () {
 				return list ([tuple ([evaluationFunction (game, board, player), null, state])]);
 			}
 			var actions = shuffle (game.actions (state));
+			var numTopScores = beamWidth [depth - 1];
+			if (numTopScores == null) {
+				var numTopScores = len (actions);
+			}
 			var topScores = function () {
 				var __accu0__ = [];
-				for (var i = 0; i < beamWidth [depth - 1]; i++) {
+				for (var i = 0; i < numTopScores; i++) {
 					__accu0__.append (tuple ([-(float ('inf')), null, null]));
 				}
 				return __accu0__;

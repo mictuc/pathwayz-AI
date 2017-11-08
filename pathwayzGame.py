@@ -315,7 +315,9 @@ def beamScores(game, state, depth, beamWidth):
     if game.isEnd(state) or depth == 0:
         return [(evaluationFunction(game, board, player), None, state)]
     actions = shuffle(game.actions(state))
-    topScores = [(-float('inf'), None, None) for i in range(beamWidth[depth-1])]
+    numTopScores = beamWidth[depth-1]
+    if numTopScores == None: numTopScores = len(actions)
+    topScores = [(-float('inf'), None, None) for i in range(numTopScores)]
     newStates = []
     for action in actions:
         newBoard, newPlayer = game.simulatedMove(state, action)

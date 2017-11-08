@@ -572,9 +572,13 @@
 				return list ([tuple ([evaluationFunction (game, board, player), null, state])]);
 			}
 			var actions = shuffle (game.actions (state));
+			var numTopScores = beamWidth [depth - 1];
+			if (numTopScores == null) {
+				var numTopScores = len (actions);
+			}
 			var topScores = function () {
 				var __accu0__ = [];
-				for (var i = 0; i < beamWidth [depth - 1]; i++) {
+				for (var i = 0; i < numTopScores; i++) {
 					__accu0__.append (tuple ([-(float ('inf')), null, null]));
 				}
 				return __accu0__;
