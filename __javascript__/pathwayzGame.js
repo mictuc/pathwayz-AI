@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-08 10:38:08
+// Transcrypt'ed from Python, 2017-11-08 12:33:36
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3220,8 +3220,11 @@ function pathwayzGame () {
 				self.isAI = dict ({'w': player1Policy != 'Human', 'b': player2Policy != 'Human'});
 				self.policy = dict ({'w': self.policies [player1Policy], 'b': self.policies [player2Policy]});
 			});},
+			get isAITurn () {return __get__ (this, function (self) {
+				return self.isAI [self.game.player (self.state)];
+			});},
 			get AITurn () {return __get__ (this, function (self) {
-				if (!(self.isAI [self.state [1]]) || self.game.isEnd (self.state)) {
+				if (!(self.isAITurn ()) || self.game.isEnd (self.state)) {
 					return ;
 				}
 				var player = self.game.player (self.state);
@@ -3246,7 +3249,7 @@ function pathwayzGame () {
 					print ('Game is over.');
 					return ;
 				}
-				if (self.isAI [self.game.player (self.state)]) {
+				if (self.isAITurn ()) {
 					print ('Wait your turn.');
 					return ;
 				}

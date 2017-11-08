@@ -376,13 +376,13 @@ class GameManager():
         self.playerNames = {'w':player1Name, 'b':player2Name}
         self.isAI = {'w':player1Policy!='Human', 'b':player2Policy!='Human'}
         self.policy = {'w':self.policies[player1Policy], 'b':self.policies[player2Policy]}
-        # # If player 1 is an AI, it will take its turn
-        # if self.isAI[self.game.player(self.state)]:
-        #     self.AITurn()
+
+    def isAITurn(self):
+        return self.isAI[self.game.player(self.state)]
 
     def AITurn(self):
         # Make's AI's move
-        if not self.isAI[self.state[1]] or self.game.isEnd(self.state):
+        if not self.isAITurn() or self.game.isEnd(self.state):
             return
         player = self.game.player(self.state)
         policy = self.policy[player]
@@ -396,8 +396,6 @@ class GameManager():
                 self.displayWinner(self.game.otherPlayer(player))
             else:
                 self.displayDraw()
-        # elif self.isAI[self.game.player(self.state)]:
-        #     self.AITurn()
 
     def humanMove(self, sqNo):
         # Takes in the square number selected by the player and if able, plays
@@ -405,7 +403,7 @@ class GameManager():
         if self.game.isEnd(self.state):
             print('Game is over.')
             return
-        if self.isAI[self.game.player(self.state)]:
+        if self.isAITurn():
             print('Wait your turn.')
             return
         row, col = self.sqNoToCoordinates(sqNo)
@@ -423,8 +421,6 @@ class GameManager():
                 self.displayWinner(self.game.otherPlayer(player))
             else:
                 self.displayDraw()
-        # elif self.isAI[self.game.player(self.state)]:
-        #     self.AITurn()
 
     def coordinatesToSqNo(self, action):
         # Takes in an action and returns corresponding square number

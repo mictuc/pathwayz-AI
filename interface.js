@@ -1,5 +1,6 @@
 window.onload = function() {
 	openModal();
+	var int=setInterval(checkAIsTurn,300);
 };
 
 function menuClicked() {
@@ -47,4 +48,23 @@ function closeModal() {
 	document.getElementById("modal").style.visibility = "hidden";
 	document.getElementById("modal").style.opacity = 0;
 	document.getElementById("modal").style.top = "-50%";
+}
+
+function checkAIsTurn() {
+	var squares = document.getElementsByClassName('square');
+	if (pathwayzGame.gameManager.isAITurn()) {
+		for(let i = 0; i < squares.length; i++) {
+				let square = squares[i];
+				square.onclick = function() {
+				}
+		}
+		pathwayzGame.gameManager.AITurn();
+	} else {
+		for(let i = 0; i < squares.length; i++) {
+				let square = squares[i];
+				square.onclick = function() {
+					pathwayzGame.gameManager.humanMove (square.getAttribute('sqid'));
+				}
+		}
+	}
 }
