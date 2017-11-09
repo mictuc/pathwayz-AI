@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-09 01:45:05
+// Transcrypt'ed from Python, 2017-11-09 14:54:57
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3200,8 +3200,8 @@ function pathwayzGame () {
 				var beamWidth = list ([null, null]);
 			}
 			else {
-				var depth = 4;
-				var beamWidth = list ([5, 5, 5, 5]);
+				var depth = 3;
+				var beamWidth = list ([1, 5, 15]);
 			}
 			var scores = beamScores (game, state, depth, beamWidth);
 			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
@@ -3211,6 +3211,89 @@ function pathwayzGame () {
 			var bestMove = __left0__ [1];
 			var _ = __left0__ [2];
 			return bestMove;
+		};
+		var AVG = function (scores) {
+			var scores = sorted (scores);
+			var weightedTotal = 0;
+			for (var i = 0; i < len (scores); i++) {
+				weightedTotal += scores [i] / (2 ^ i + 1);
+			}
+			return weightedTotal;
+		};
+		var valueExpectimax = function (game, state, depth, originalPlayer) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			if (game.isEnd (state) || depth == 0) {
+				if (originalPlayer) {
+					return evaluationFunction (game, board, player);
+				}
+				else {
+					return -(evaluationFunction (game, board, player));
+				}
+			}
+			else if (originalPlayer) {
+				var highestScore = -(float ('inf'));
+				var __iterable0__ = game.actions (state);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var action = __iterable0__ [__index0__];
+					var score = value (game, game.simulatedMove (state, action), depth - 1, false);
+					var highestScore = MAX (list ([highestScore, score]));
+				}
+				return highestScore;
+			}
+			else {
+				var scores = list ([]);
+				var __iterable0__ = game.actions (state);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var action = __iterable0__ [__index0__];
+					var score = value (game, game.simulatedMove (state, action), depth - 1, true);
+					scores.append (score);
+				}
+				var expectedScore = AVG (scores);
+				return expectedScore;
+			}
+		};
+		var advancedExpectimax = function (game, state) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			if (oneMoveAway (game, board, game.otherPlayer (player))) {
+				return beamMinimax (game, state);
+			}
+			var tempBoard = function () {
+				var __accu0__ = [];
+				var __iterable0__ = board;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var row = __iterable0__ [__index0__];
+					__accu0__.append (row.__getslice__ (0, null, 1));
+				}
+				return __accu0__;
+			} ();
+			var legalMoves = game.actions (state);
+			var piecesPlayed = 96 - 0.5 * len (legalMoves);
+			var depth = int (piecesPlayed / 20);
+			var scores = function () {
+				var __accu0__ = [];
+				var __iterable0__ = legalMoves;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var action = __iterable0__ [__index0__];
+					__accu0__.append (value (game, game.simulatedMove (tuple ([tempBoard, player]), action), depth, false));
+				}
+				return __accu0__;
+			} ();
+			var bestScore = MAX (scores);
+			var bestIndices = function () {
+				var __accu0__ = [];
+				for (var index = 0; index < len (scores); index++) {
+					if (scores [index] == bestScore) {
+						__accu0__.append (index);
+					}
+				}
+				return __accu0__;
+			} ();
+			var chosenIndex = random.choice (bestIndices);
+			return legalMoves [chosenIndex];
 		};
 		var featureExtractor = function (game, board, player) {
 			var myLongestPath = game.longestPath (board, player);
@@ -3248,7 +3331,7 @@ function pathwayzGame () {
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
-				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax});
+				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Expectimax': advancedExpectimax});
 				self.displayBoard ();
 				self.isAI = dict ({'w': false, 'b': false});
 			});},
@@ -3415,11 +3498,13 @@ function pathwayzGame () {
 			'random' +
 		'</use>')
 		__pragma__ ('<all>')
+			__all__.AVG = AVG;
 			__all__.GameManager = GameManager;
 			__all__.MAX = MAX;
 			__all__.MIN = MIN;
 			__all__.PathwayzGame = PathwayzGame;
 			__all__.advancedBaselineMove = advancedBaselineMove;
+			__all__.advancedExpectimax = advancedExpectimax;
 			__all__.advancedMinimax = advancedMinimax;
 			__all__.baselineMove = baselineMove;
 			__all__.beamMinimax = beamMinimax;
@@ -3433,6 +3518,7 @@ function pathwayzGame () {
 			__all__.randomMove = randomMove;
 			__all__.shuffle = shuffle;
 			__all__.value = value;
+			__all__.valueExpectimax = valueExpectimax;
 		__pragma__ ('</all>')
 	}) ();
    return __all__;

@@ -364,6 +364,52 @@ def beamMinimax(game, state):
     _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
     return bestMove
 
+def AVG(scores):
+    scores = sorted(scores)
+    weightedTotal = 0
+    for i in range(len(scores)):
+        weightedTotal += scores[i] / (2 ^ (i+1))
+    return weightedTotal 
+
+
+def valueExpectimax(game, state, depth, originalPlayer):
+    board, player = state
+    if game.isEnd(state) or depth == 0:
+        if originalPlayer:
+            return evaluationFunction(game, board, player)
+        else:
+            return -evaluationFunction(game, board, player)
+    elif originalPlayer:
+        highestScore = -float('inf')
+        for action in game.actions(state):
+            score = value(game, game.simulatedMove(state, action), depth-1, False)
+            highestScore = MAX([highestScore, score])
+        return highestScore
+    else:
+        scores = []
+        for action in game.actions(state):
+            score = value(game, game.simulatedMove(state, action), depth-1, True)
+            scores.append(score)
+        expectedScore = AVG(scores)
+        return expectedScore
+
+def advancedExpectimax(game, state):
+    # Collect legal moves and successor states
+    board, player = state
+    if oneMoveAway(game, board, game.otherPlayer(player)):
+        return beamMinimax(game, state)
+    tempBoard = [row[:] for row in board]
+    legalMoves = game.actions(state)
+    piecesPlayed = 96 - 0.5 * len(legalMoves)
+    depth = int(piecesPlayed / 20)
+    #print(depth)
+    scores = [value(game, game.simulatedMove((tempBoard, player), action), depth, False) for action in legalMoves]
+    bestScore = MAX(scores)
+    bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+    chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+    return legalMoves[chosenIndex]
+
+
 def featureExtractor(game, board, player):
     myLongestPath = game.longestPath(board, player)
     yourLongestPath = game.longestPath(board, game.otherPlayer(player))
@@ -384,7 +430,7 @@ class GameManager():
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Expectimax':advancedExpectimax}
         self.displayBoard()
         self.isAI = {'w':False, 'b':False}
 
