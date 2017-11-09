@@ -26,7 +26,7 @@
 				var __left0__ = state;
 				var board = __left0__ [0];
 				var player = __left0__ [1];
-				return self.longestPath (board, player) == 12 || self.longestPath (board, self.otherPlayer (player)) == 12 || self.fullBoard (state);
+				return self.playerWon (board, player) || self.playerWon (board, self.otherPlayer (player)) || self.fullBoard (state);
 			});},
 			get fullBoard () {return __get__ (this, function (self, state) {
 				var __left0__ = state;
@@ -45,7 +45,7 @@
 				var __left0__ = state;
 				var board = __left0__ [0];
 				var _ = __left0__ [1];
-				return self.longestPath (board, player) == 12;
+				return self.playerWon (board, player);
 			});},
 			get utility () {return __get__ (this, function (self, state) {
 				var __left0__ = state;
@@ -252,6 +252,39 @@
 					}
 				}
 				return longestPath + 1;
+			});},
+			get playerWon () {return __get__ (this, function (self, board, player) {
+				self.alreadyChecked = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 8; j++) {
+						__accu0__.append (function () {
+							var __accu1__ = [];
+							for (var i = 0; i < 12; i++) {
+								__accu1__.append (false);
+							}
+							return __accu1__;
+						} ());
+					}
+					return __accu0__;
+				} ();
+				var longestPath = -(1);
+				var test = 0;
+				var j = 0;
+				for (var i = 0; i < 8; i++) {
+					if (board [i] [j].lower () == player) {
+						if (!(self.alreadyChecked [i] [j])) {
+							self.alreadyChecked [i] [j] = true;
+							var newPath = self.findPathLength (board, player, i, j, test) - j;
+							if (newPath > longestPath) {
+								var longestPath = newPath;
+							}
+						}
+					}
+					if (longestPath == 11) {
+						return true;
+					}
+				}
+				return longestPath == 11;
 			});},
 			get simulatedMove () {return __get__ (this, function (self, state, action) {
 				var __left0__ = state;
@@ -625,8 +658,8 @@
 				var beamWidth = list ([null, null]);
 			}
 			else {
-				var depth = 3;
-				var beamWidth = list ([1, 5, 15]);
+				var depth = 4;
+				var beamWidth = list ([5, 5, 5, 5]);
 			}
 			var scores = beamScores (game, state, depth, beamWidth);
 			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {

@@ -14,8 +14,8 @@ class PathwayzGame:
         # Takes in a state and returns true if the game is over, either by one
         # player winning or the board being full
         board, player = state
-        return self.longestPath(board, player) == 12 \
-            or self.longestPath(board, self.otherPlayer(player)) == 12 \
+        return self.playerWon(board, player) \
+            or self.playerWon(board, self.otherPlayer(player)) \
             or self.fullBoard(state)
 
     def fullBoard(self, state):
@@ -30,7 +30,7 @@ class PathwayzGame:
     def isWinner(self, state, player):
         # Takes in a state and player and returns true if player is the winner
         board, _ = state
-        return self.longestPath(board, player) == 12
+        return self.playerWon(board, player)
 
 
     def utility(self, state):
@@ -117,6 +117,8 @@ class PathwayzGame:
                         farthestCol = maxCol
         return farthestCol
 
+    #TODO: remove test?
+
     def longestPath(self, board, player):
         # Takes in a board and player and returns the longest contiguous
         # path (in terms of length of columns traversed) by the player
@@ -134,6 +136,24 @@ class PathwayzGame:
             if longestPath == 11:
                 return 12
         return longestPath + 1
+
+    def playerWon(self, board, player):
+        # Takes in a board and player and returns True if the player has won
+        self.alreadyChecked = [[False for i in range(12)] for j in range(8)]
+        longestPath = -1
+        test = 0
+        j = 0
+        for i in range(8):
+            if (board[i][j].lower() == player):
+                if not self.alreadyChecked[i][j]:
+                    self.alreadyChecked[i][j] = True
+                    newPath = self.findPathLength(board, player, i, j, test) - j
+                    if newPath > longestPath:
+                        longestPath = newPath
+            # Complete path
+            if longestPath == 11:
+                return True
+        return longestPath == 11
 
     def simulatedMove(self, state, action):
         board, player = state
@@ -353,6 +373,7 @@ def featureExtractor(game, board, player):
 def evaluationFunction(game, board, player):
     features = featureExtractor(game, board, player)
     weights = [20,-8,3,-6,-0.5,0.5,0.5,-0.5,2]
+    #weights = [20,-8,2,-4,-0.2,0.2,0.1,-0.1,1]
     results = ([i*j for (i, j) in zip(features, weights)])
     if game.isEnd((board,player)):
         return game.utility((board,player)) + sum(results)
