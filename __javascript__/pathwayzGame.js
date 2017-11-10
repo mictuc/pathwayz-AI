@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-09 19:51:34
+// Transcrypt'ed from Python, 2017-11-10 14:46:33
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -2468,6 +2468,96 @@ function pathwayzGame () {
     __all__.__setslice__ = __setslice__;
 	__nest__ (
 		__all__,
+		'math', {
+			__all__: {
+				__inited__: false,
+				__init__: function (__all__) {
+					var pi = Math.PI;
+					var e = Math.E;
+					var exp = Math.exp;
+					var expm1 = function (x) {
+						return Math.exp (x) - 1;
+					};
+					var log = function (x, base) {
+						return (base === undefined ? Math.log (x) : Math.log (x) / Math.log (base));
+					};
+					var log1p = function (x) {
+						return Math.log (x + 1);
+					};
+					var log2 = function (x) {
+						return Math.log (x) / Math.LN2;
+					};
+					var log10 = function (x) {
+						return Math.log (x) / Math.LN10;
+					};
+					var pow = Math.pow;
+					var sqrt = Math.sqrt;
+					var sin = Math.sin;
+					var cos = Math.cos;
+					var tan = Math.tan;
+					var asin = Math.asin;
+					var acos = Math.acos;
+					var atan = Math.atan;
+					var atan2 = Math.atan2;
+					var hypot = Math.hypot;
+					var degrees = function (x) {
+						return (x * 180) / Math.PI;
+					};
+					var radians = function (x) {
+						return (x * Math.PI) / 180;
+					};
+					var sinh = Math.sinh;
+					var cosh = Math.cosh;
+					var tanh = Math.tanh;
+					var asinh = Math.asinh;
+					var acosh = Math.acosh;
+					var atanh = Math.atanh;
+					var floor = Math.floor;
+					var ceil = Math.ceil;
+					var trunc = Math.trunc;
+					var isnan = isNaN;
+					var inf = Infinity;
+					var nan = NaN;
+					__pragma__ ('<all>')
+						__all__.acos = acos;
+						__all__.acosh = acosh;
+						__all__.asin = asin;
+						__all__.asinh = asinh;
+						__all__.atan = atan;
+						__all__.atan2 = atan2;
+						__all__.atanh = atanh;
+						__all__.ceil = ceil;
+						__all__.cos = cos;
+						__all__.cosh = cosh;
+						__all__.degrees = degrees;
+						__all__.e = e;
+						__all__.exp = exp;
+						__all__.expm1 = expm1;
+						__all__.floor = floor;
+						__all__.hypot = hypot;
+						__all__.inf = inf;
+						__all__.isnan = isnan;
+						__all__.log = log;
+						__all__.log10 = log10;
+						__all__.log1p = log1p;
+						__all__.log2 = log2;
+						__all__.nan = nan;
+						__all__.pi = pi;
+						__all__.pow = pow;
+						__all__.radians = radians;
+						__all__.sin = sin;
+						__all__.sinh = sinh;
+						__all__.sqrt = sqrt;
+						__all__.tan = tan;
+						__all__.tanh = tanh;
+						__all__.trunc = trunc;
+					__pragma__ ('</all>')
+				}
+			}
+		}
+	);
+	__nest__ (
+		__all__,
 		'random', {
 			__all__: {
 				__inited__: false,
@@ -2541,32 +2631,135 @@ function pathwayzGame () {
 		}
 	);
 	(function () {
+		var math = {};
 		var random = {};
 		__nest__ (random, '', __init__ (__world__.random));
+		__nest__ (math, '', __init__ (__world__.math));
+		var Node = __class__ ('Node', [object], {
+			get __init__ () {return __get__ (this, function (self, curState, children, utility, visits, parent, action) {
+				self.action = action;
+				self.state = curState;
+				self.children = children;
+				self.utility = utility;
+				self.visits = visits;
+				self.parent = parent;
+			});}
+		});
+		var select = function (node) {
+			if (node.visits == 0 || len (node.children) == 0) {
+				return node;
+			}
+			for (var i = 0; i < len (node.children); i++) {
+				if (node.children [i].visits == 0) {
+					return node.children [i];
+				}
+			}
+			var score = 0;
+			var result = node;
+			for (var i = 0; i < len (node.children); i++) {
+				var newScore = selectfn (node.children [i]);
+				if (newScore > score) {
+					var score = newScore;
+					var result = node.children [i];
+				}
+			}
+			return select (result);
+		};
+		var expand = function (game, node) {
+			var state = node.state;
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			var sortedChildren = list ([]);
+			var __iterable0__ = game.actions (state);
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var move = __iterable0__ [__index0__];
+				var newState = game.simulatedMove (state, move);
+				var __left0__ = newState;
+				var newBoard = __left0__ [0];
+				var newPlayer = __left0__ [1];
+				var newNode = Node (newState, list ([]), evaluationFunction (game, newBoard, player), 0, node, move);
+				sortedChildren.append (newNode);
+			}
+			var sortedChildren = sorted (sortedChildren, __kwargtrans__ ({key: (function __lambda__ (score) {
+				return score.utility;
+			}), reverse: true}));
+			node.children = sortedChildren.__getslice__ (0, 10, 1);
+			return node;
+		};
+		var selectfn = function (node) {
+			return node.utility / node.visits + math.sqrt ((2 * math.log (node.parent.visits)) / node.visits);
+		};
+		var backpropagate = function (node, score) {
+			node.visits++;
+			node.utility = node.utility + score;
+			if (node.parent) {
+				backpropagate (node.parent, score);
+			}
+		};
+		var MCTSdepthCharge = function (game, node, originalPlayer, depth) {
+			var state = node.state;
+			if (game.isEnd (state) || depth == 0) {
+				if (originalPlayer) {
+					backpropagate (node, evaluationFunction (game, state [0], state [1]));
+					return ;
+				}
+				else {
+					backpropagate (node, -(evaluationFunction (game, state [0], state [1])));
+					return ;
+				}
+			}
+			var moves = game.actions (state);
+			var rand = random.choice (moves);
+			var newState = game.simulatedMove (state, rand);
+			var __iterable0__ = node.children;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var child = __iterable0__ [__index0__];
+				if (child.state == newState) {
+					MCTSdepthCharge (game, child, !(originalPlayer), depth - 1);
+					return ;
+				}
+			}
+			var newNode = Node (newState, list ([]), 0, 0, node, rand);
+			node.children.append (newNode);
+			MCTSdepthCharge (game, newNode, !(originalPlayer), depth - 1);
+		};
+		var monteCarloTreeSearch = function (game, state) {
+			var rootNode = Node (state, list ([]), 0, 0, null, null);
+			var count = 50;
+			var node = rootNode;
+			for (var i = 0; i < count; i++) {
+				var node = select (node);
+				var node = expand (game, node);
+				var __iterable0__ = node.children;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var child = __iterable0__ [__index0__];
+					MCTSdepthCharge (game, child, false, 50);
+				}
+			}
+			return sorted (rootNode.children, __kwargtrans__ ({key: (function __lambda__ (c) {
+				return c.utility;
+			}), reverse: true})) [0].action;
+		};
 		var monteCarloSearch = function (game, state) {
 			var __left0__ = state;
 			var board = __left0__ [0];
 			var player = __left0__ [1];
-			var moves = list ([]);
-			var __iterable0__ = game.actions (state);
+			var scoredMoves = list ([]);
+			var moves = shuffle (game.actions (state));
+			var __iterable0__ = moves;
 			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 				var move = __iterable0__ [__index0__];
 				var __left0__ = game.simulatedMove (state, move);
 				var newBoard = __left0__ [0];
 				var newPlayer = __left0__ [1];
 				var score = evaluationFunction (game, newBoard, player);
-				moves.append (tuple ([move, score]));
+				scoredMoves.append (tuple ([move, score]));
 			}
-			var moves = sorted (moves, __kwargtrans__ ({key: (function __lambda__ (scoredMove) {
+			var scoredMoves = sorted (scoredMoves, __kwargtrans__ ({key: (function __lambda__ (scoredMove) {
 				return scoredMove [1];
 			}), reverse: true}));
-			var children = list ([]);
-			for (var i = 0; i < 5; i++) {
-				if (i >= len (moves)) {
-					break;
-				}
-				children.append (moves [i]);
-			}
+			var children = scoredMoves.__getslice__ (0, 5, 1);
 			var count = 100;
 			var childrenScores = list ([]);
 			for (var i = 0; i < len (children); i++) {
@@ -2599,9 +2792,14 @@ function pathwayzGame () {
 					return -(evaluationFunction (game, board, player));
 				}
 			}
-			var moves = game.actions (state);
-			var rand = random.choice (moves);
-			var newState = game.simulatedMove (state, rand);
+			if (random.random () < 0.3) {
+				var nextMove = advancedBaselineMove (game, state);
+			}
+			else {
+				var moves = game.actions (state);
+				var nextMove = random.choice (moves);
+			}
+			var newState = game.simulatedMove (state, nextMove);
 			return depthCharge (game, newState, !(originalPlayer));
 		};
 		var PathwayzGame = __class__ ('PathwayzGame', [object], {
@@ -3371,7 +3569,7 @@ function pathwayzGame () {
 		};
 		var evaluationFunction = function (game, board, player) {
 			var features = featureExtractor (game, board, player);
-			var weights = list ([20, -(8), 3, -(6), -(0.5), 0.5, 0.5, -(0.5), 2]);
+			var weights = list ([20, -(8), 3, -(6), -(0.2), 0.2, 0.1, -(0.1), 1]);
 			var results = function () {
 				var __accu0__ = [];
 				var __iterable0__ = zip (features, weights);
@@ -3392,7 +3590,7 @@ function pathwayzGame () {
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
-				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Expectimax': advancedExpectimax, 'PAI MCS': monteCarloSearch});
+				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Expectimax': advancedExpectimax, 'PAI MCS': monteCarloSearch, 'PAI MCTS': monteCarloTreeSearch});
 				self.displayBoard ();
 				self.isAI = dict ({'w': false, 'b': false});
 			});},
@@ -3556,29 +3754,37 @@ function pathwayzGame () {
 		});
 		var gameManager = GameManager ();
 		__pragma__ ('<use>' +
+			'math' +
 			'random' +
 		'</use>')
 		__pragma__ ('<all>')
 			__all__.AVG = AVG;
 			__all__.GameManager = GameManager;
 			__all__.MAX = MAX;
+			__all__.MCTSdepthCharge = MCTSdepthCharge;
 			__all__.MIN = MIN;
+			__all__.Node = Node;
 			__all__.PathwayzGame = PathwayzGame;
 			__all__.advancedBaselineMove = advancedBaselineMove;
 			__all__.advancedExpectimax = advancedExpectimax;
 			__all__.advancedMinimax = advancedMinimax;
+			__all__.backpropagate = backpropagate;
 			__all__.baselineMove = baselineMove;
 			__all__.beamMinimax = beamMinimax;
 			__all__.beamScores = beamScores;
 			__all__.depthCharge = depthCharge;
 			__all__.evaluationFunction = evaluationFunction;
+			__all__.expand = expand;
 			__all__.featureExtractor = featureExtractor;
 			__all__.game = game;
 			__all__.gameManager = gameManager;
 			__all__.minimax = minimax;
 			__all__.monteCarloSearch = monteCarloSearch;
+			__all__.monteCarloTreeSearch = monteCarloTreeSearch;
 			__all__.oneMoveAway = oneMoveAway;
 			__all__.randomMove = randomMove;
+			__all__.select = select;
+			__all__.selectfn = selectfn;
 			__all__.shuffle = shuffle;
 			__all__.value = value;
 			__all__.valueExpectimax = valueExpectimax;

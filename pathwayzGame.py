@@ -1,21 +1,107 @@
 import random
+import math
+
+
+
+class Node:
+    def __init__(self,curState,children,utility,visits,parent,action):
+        self.action = action
+        self.state = curState
+        self.children = children
+        self.utility = utility
+        self.visits = visits
+        self.parent = parent
+
+
+def select (node):
+    if node.visits == 0 or len(node.children) == 0:
+        return node
+    for i in range(len(node.children)):
+          if node.children[i].visits == 0: 
+            return node.children[i]
+    score = 0
+    result = node
+    for i in range(len(node.children)):
+        newScore = selectfn(node.children[i])
+        if newScore > score:
+            score = newScore 
+            result = node.children[i]
+    return select(result)
+
+def expand (game, node):
+    # Collect legal moves and successor states
+    state = node.state
+    board, player = state
+
+    sortedChildren = []
+    for move in game.actions(state):
+        newState = game.simulatedMove(state, move)
+        newBoard, newPlayer = newState
+        newNode = Node(newState, [], evaluationFunction(game, newBoard, player), 0, node, move)
+        sortedChildren.append(newNode)
+    sortedChildren = sorted(sortedChildren, key=lambda score: score.utility, reverse=True)
+
+    node.children = sortedChildren[:10]
+
+    return node
+
+def selectfn(node):
+    return node.utility/node.visits+math.sqrt(2*math.log(node.parent.visits)/node.visits)
+
+def backpropagate (node,score):
+    node.visits += 1
+    node.utility = node.utility+score
+    if node.parent:
+        backpropagate(node.parent,score)
+
+
+
+
+def MCTSdepthCharge (game,node,originalPlayer,depth):
+    state = node.state
+    if game.isEnd(state) or depth == 0:
+        if originalPlayer:
+            backpropagate(node,evaluationFunction(game,state[0],state[1]))
+            return
+        else:
+            backpropagate(node,-evaluationFunction(game,state[0],state[1]))
+            return 
+    moves = game.actions(state)
+    rand = random.choice(moves)
+    newState = game.simulatedMove(state, rand)
+    for child in node.children:
+        if child.state == newState:
+            MCTSdepthCharge(game, child, not originalPlayer, depth-1)
+            return
+    newNode = Node(newState,[],0,0,node,rand)
+    node.children.append(newNode)
+    MCTSdepthCharge(game, newNode, not originalPlayer, depth-1)
+
+
+def monteCarloTreeSearch(game,state):
+    rootNode = Node(state,[],0,0,None,None)
+    count = 50
+    node = rootNode
+    for i in range(count):
+        node = select(node)
+        node = expand(game,node)
+        for child in node.children:
+            MCTSdepthCharge(game, child, False, 50)
+    return sorted(rootNode.children, key=lambda c: c.utility, reverse=True)[0].action
 
 
 def monteCarloSearch(game, state):
     board, player = state
-    moves = []
-    for move in game.actions(state):
+    scoredMoves = []
+    moves = shuffle(game.actions(state))
+    for move in moves:
         newBoard, newPlayer = game.simulatedMove(state, move)
         score = evaluationFunction(game, newBoard, player)
-        moves.append((move, score))
-    moves = sorted(moves, key=lambda scoredMove: scoredMove[1], reverse=True)
+        scoredMoves.append((move, score))
+    scoredMoves = sorted(scoredMoves, key=lambda scoredMove: scoredMove[1], reverse=True)
     # TODO: try expanding 30
     # TODO: prune all useless permanent moves (no neigbors)
-    children = []
-    for i in range(5):
-        if i >= len(moves):
-            break
-        children.append(moves[i])
+    children = scoredMoves[:5]
     count = 100
     childrenScores = []
     for i in range(len(children)):
@@ -38,9 +124,12 @@ def depthCharge(game, state, originalPlayer):
             return evaluationFunction(game, board, player)
         else:
             return -evaluationFunction(game, board, player)
-    moves = game.actions(state)
-    rand = random.choice(moves)
-    newState = game.simulatedMove(state, rand)
+    if random.random() < 0.3:
+        nextMove = advancedBaselineMove(game, state)
+    else:
+        moves = game.actions(state)
+        nextMove = random.choice(moves)
+    newState = game.simulatedMove(state, nextMove)
     return depthCharge(game, newState, not originalPlayer)
 
 
@@ -462,8 +551,9 @@ def featureExtractor(game, board, player):
 
 def evaluationFunction(game, board, player):
     features = featureExtractor(game, board, player)
-    weights = [20,-8,3,-6,-0.5,0.5,0.5,-0.5,2]
-    #weights = [20,-8,2,-4,-0.2,0.2,0.1,-0.1,1]
+    #weights = [20,-8,3,-6,-0.5,0.5,0.5,-0.5,2]
+    weights = [20,-8,3,-6,-0.2,0.2,0.1,-0.1,1]
+    #weights = [20,-8,2,-2,0,0,0,0,0]
     results = ([i*j for (i, j) in zip(features, weights)])
     if game.isEnd((board,player)):
         return game.utility((board,player)) + sum(results)
@@ -474,7 +564,7 @@ class GameManager():
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch, 'PAI MCTS':monteCarloTreeSearch}
         self.displayBoard()
         self.isAI = {'w':False, 'b':False}
 
