@@ -1,5 +1,49 @@
 import random
 
+
+def monteCarloSearch(game, state):
+    board, player = state
+    moves = []
+    for move in game.actions(state):
+        newBoard, newPlayer = game.simulatedMove(state, move)
+        score = evaluationFunction(game, newBoard, player)
+        moves.append((move, score))
+    moves = sorted(moves, key=lambda scoredMove: scoredMove[1], reverse=True)
+    # TODO: try expanding 30
+    # TODO: prune all useless permanent moves (no neigbors)
+    children = []
+    for i in range(5):
+        if i >= len(moves):
+            break
+        children.append(moves[i])
+    count = 100
+    childrenScores = []
+    for i in range(len(children)):
+        move = children[i]
+        monteScore = 0
+        for j in range(count):
+            monteScore += depthCharge(game, state, player)
+        monteScore = float(monteScore) / count
+        childrenScores.append((move, monteScore))
+    childrenScores = sorted(childrenScores, key=lambda child: child[1], reverse=True)
+    bestMove, _ = childrenScores[0]
+    print(bestMove)
+    return bestMove[0]
+
+def depthCharge(game, state, originalPlayer):
+    #print("Charge")
+    board, player = state
+    if game.isEnd(state):
+        if originalPlayer:
+            return evaluationFunction(game, board, player)
+        else:
+            return -evaluationFunction(game, board, player)
+    moves = game.actions(state)
+    rand = random.choice(moves)
+    newState = game.simulatedMove(state, rand)
+    return depthCharge(game, newState, not originalPlayer)
+
+
 class PathwayzGame:
     def __init__(self):
         pass
@@ -430,7 +474,7 @@ class GameManager():
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Expectimax':advancedExpectimax}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch}
         self.displayBoard()
         self.isAI = {'w':False, 'b':False}
 

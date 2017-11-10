@@ -1,6 +1,67 @@
 	(function () {
 		var random = {};
 		__nest__ (random, '', __init__ (__world__.random));
+		var monteCarloSearch = function (game, state) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			var moves = list ([]);
+			var __iterable0__ = game.actions (state);
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var move = __iterable0__ [__index0__];
+				var __left0__ = game.simulatedMove (state, move);
+				var newBoard = __left0__ [0];
+				var newPlayer = __left0__ [1];
+				var score = evaluationFunction (game, newBoard, player);
+				moves.append (tuple ([move, score]));
+			}
+			var moves = sorted (moves, __kwargtrans__ ({key: (function __lambda__ (scoredMove) {
+				return scoredMove [1];
+			}), reverse: true}));
+			var children = list ([]);
+			for (var i = 0; i < 5; i++) {
+				if (i >= len (moves)) {
+					break;
+				}
+				children.append (moves [i]);
+			}
+			var count = 100;
+			var childrenScores = list ([]);
+			for (var i = 0; i < len (children); i++) {
+				var move = children [i];
+				var monteScore = 0;
+				for (var j = 0; j < count; j++) {
+					monteScore += depthCharge (game, state, player);
+				}
+				var monteScore = float (monteScore) / count;
+				childrenScores.append (tuple ([move, monteScore]));
+			}
+			var childrenScores = sorted (childrenScores, __kwargtrans__ ({key: (function __lambda__ (child) {
+				return child [1];
+			}), reverse: true}));
+			var __left0__ = childrenScores [0];
+			var bestMove = __left0__ [0];
+			var _ = __left0__ [1];
+			print (bestMove);
+			return bestMove [0];
+		};
+		var depthCharge = function (game, state, originalPlayer) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			if (game.isEnd (state)) {
+				if (originalPlayer) {
+					return evaluationFunction (game, board, player);
+				}
+				else {
+					return -(evaluationFunction (game, board, player));
+				}
+			}
+			var moves = game.actions (state);
+			var rand = random.choice (moves);
+			var newState = game.simulatedMove (state, rand);
+			return depthCharge (game, newState, !(originalPlayer));
+		};
 		var PathwayzGame = __class__ ('PathwayzGame', [object], {
 			get __init__ () {return __get__ (this, function (self) {
 				// pass;
@@ -789,7 +850,7 @@
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
-				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Expectimax': advancedExpectimax});
+				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Expectimax': advancedExpectimax, 'PAI MCS': monteCarloSearch});
 				self.displayBoard ();
 				self.isAI = dict ({'w': false, 'b': false});
 			});},
@@ -967,11 +1028,13 @@
 			__all__.baselineMove = baselineMove;
 			__all__.beamMinimax = beamMinimax;
 			__all__.beamScores = beamScores;
+			__all__.depthCharge = depthCharge;
 			__all__.evaluationFunction = evaluationFunction;
 			__all__.featureExtractor = featureExtractor;
 			__all__.game = game;
 			__all__.gameManager = gameManager;
 			__all__.minimax = minimax;
+			__all__.monteCarloSearch = monteCarloSearch;
 			__all__.oneMoveAway = oneMoveAway;
 			__all__.randomMove = randomMove;
 			__all__.shuffle = shuffle;
