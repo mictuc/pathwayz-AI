@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-10 14:46:33
+// Transcrypt'ed from Python, 2017-11-10 15:55:16
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -2654,13 +2654,16 @@ function pathwayzGame () {
 					return node.children [i];
 				}
 			}
-			var score = 0;
-			var result = node;
+			var result = random.choice (node.children);
+			var score = selectfn (result);
 			for (var i = 0; i < len (node.children); i++) {
-				var newScore = selectfn (node.children [i]);
-				if (newScore > score) {
-					var score = newScore;
-					var result = node.children [i];
+				var newNode = node.children [i];
+				if (newNode != result) {
+					var newScore = selectfn (newNode);
+					if (newScore > score) {
+						var score = newScore;
+						var result = newNode;
+					}
 				}
 			}
 			return select (result);
@@ -2684,7 +2687,7 @@ function pathwayzGame () {
 			var sortedChildren = sorted (sortedChildren, __kwargtrans__ ({key: (function __lambda__ (score) {
 				return score.utility;
 			}), reverse: true}));
-			node.children = sortedChildren.__getslice__ (0, 10, 1);
+			node.children = sortedChildren.__getslice__ (0, 30, 1);
 			return node;
 		};
 		var selectfn = function (node) {
@@ -2726,7 +2729,7 @@ function pathwayzGame () {
 		};
 		var monteCarloTreeSearch = function (game, state) {
 			var rootNode = Node (state, list ([]), 0, 0, null, null);
-			var count = 50;
+			var count = 100000;
 			var node = rootNode;
 			for (var i = 0; i < count; i++) {
 				var node = select (node);

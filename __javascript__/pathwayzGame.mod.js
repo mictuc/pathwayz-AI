@@ -22,13 +22,16 @@
 					return node.children [i];
 				}
 			}
-			var score = 0;
-			var result = node;
+			var result = random.choice (node.children);
+			var score = selectfn (result);
 			for (var i = 0; i < len (node.children); i++) {
-				var newScore = selectfn (node.children [i]);
-				if (newScore > score) {
-					var score = newScore;
-					var result = node.children [i];
+				var newNode = node.children [i];
+				if (newNode != result) {
+					var newScore = selectfn (newNode);
+					if (newScore > score) {
+						var score = newScore;
+						var result = newNode;
+					}
 				}
 			}
 			return select (result);
@@ -52,7 +55,7 @@
 			var sortedChildren = sorted (sortedChildren, __kwargtrans__ ({key: (function __lambda__ (score) {
 				return score.utility;
 			}), reverse: true}));
-			node.children = sortedChildren.__getslice__ (0, 10, 1);
+			node.children = sortedChildren.__getslice__ (0, 30, 1);
 			return node;
 		};
 		var selectfn = function (node) {
@@ -94,7 +97,7 @@
 		};
 		var monteCarloTreeSearch = function (game, state) {
 			var rootNode = Node (state, list ([]), 0, 0, null, null);
-			var count = 50;
+			var count = 100000;
 			var node = rootNode;
 			for (var i = 0; i < count; i++) {
 				var node = select (node);

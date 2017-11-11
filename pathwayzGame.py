@@ -19,13 +19,15 @@ def select (node):
     for i in range(len(node.children)):
           if node.children[i].visits == 0: 
             return node.children[i]
-    score = 0
-    result = node
+    result = random.choice(node.children)
+    score = selectfn(result)
     for i in range(len(node.children)):
-        newScore = selectfn(node.children[i])
-        if newScore > score:
-            score = newScore 
-            result = node.children[i]
+        newNode = node.children[i]
+        if newNode != result:
+            newScore = selectfn(newNode)
+            if newScore > score:
+                score = newScore 
+                result = newNode
     return select(result)
 
 def expand (game, node):
@@ -41,7 +43,7 @@ def expand (game, node):
         sortedChildren.append(newNode)
     sortedChildren = sorted(sortedChildren, key=lambda score: score.utility, reverse=True)
 
-    node.children = sortedChildren[:10]
+    node.children = sortedChildren[:30]
 
     return node
 
@@ -80,7 +82,7 @@ def MCTSdepthCharge (game,node,originalPlayer,depth):
 
 def monteCarloTreeSearch(game,state):
     rootNode = Node(state,[],0,0,None,None)
-    count = 50
+    count = 100000
     node = rootNode
     for i in range(count):
         node = select(node)
