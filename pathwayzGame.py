@@ -331,6 +331,59 @@ class PathwayzGame:
                     yourNum2EmptyNeighbor += 1
         return (myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces-yourNumPieces)
 
+    def countAllPieces(self, board, player):
+        pieces = collections.defaultdict(int)
+        for i,j in [(i, j) for j in range(12) for i in range(8)]:
+            if board[i][j] == player.upper():
+                pieces[myPerm] += 1
+                pieces[myTotal] += 1
+            elif board[i][j] == self.otherPlayer(player).upper():
+                pieces[yourPerm] += 1
+                pieces[yourTotal] += 1
+            elif board[i][j] == player:
+                pieces[myTotal] += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    pieces[myPerm] += 1
+                elif numEmptyNeighbors == 1:
+                    pieces[my1Empty] += 1
+                elif numEmptyNeighbors == 2:
+                    pieces[my2Empty] += 1
+                elif numEmptyNeighbors == 3:
+                    pieces[my3Empty] += 1
+                elif numEmptyNeighbors == 4:
+                    pieces[my4Empty] += 1
+                elif numEmptyNeighbors == 5:
+                    pieces[my5Empty] += 1
+                elif numEmptyNeighbors == 6:
+                    pieces[my6Empty] += 1
+                elif numEmptyNeighbors == 7:
+                    pieces[my7Empty] += 1
+                elif numEmptyNeighbors == 8:
+                    pieces[my8Empty] += 1
+            elif board[i][j] == self.otherPlayer(player):
+                pieces[yourTotal] += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    pieces[yourPerm] += 1
+                elif numEmptyNeighbors == 1:
+                    pieces[your1Empty] += 1
+                elif numEmptyNeighbors == 2:
+                    pieces[your2Empty] += 1
+                elif numEmptyNeighbors == 3:
+                    pieces[your3Empty] += 1
+                elif numEmptyNeighbors == 4:
+                    pieces[your4Empty] += 1
+                elif numEmptyNeighbors == 5:
+                    pieces[your5Empty] += 1
+                elif numEmptyNeighbors == 6:
+                    pieces[your6Empty] += 1
+                elif numEmptyNeighbors == 7:
+                    pieces[your7Empty] += 1
+                elif numEmptyNeighbors == 8:
+                    pieces[your8Empty] += 1
+        return (myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces-yourNumPieces)
+
     def getNumEmptyNeighbors(self, row, col, board):
         neighbors = self.surroundingPlaces(row, col)
         numEmptyNeighbors = 0
@@ -538,14 +591,24 @@ def advancedExpectimax(game, state):
     piecesPlayed = 96 - 0.5 * len(legalMoves)
     depth = int(piecesPlayed / 20)
     #print(depth)
-    scores = [value(game, game.simulatedMove((tempBoard, player), action), depth, False) for action in legalMoves]
+    scores = [valueExpectimax(game, game.simulatedMove((tempBoard, player), action), depth, False) for action in legalMoves]
     bestScore = MAX(scores)
     bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
     chosenIndex = random.choice(bestIndices) # Pick randomly among the best
     return legalMoves[chosenIndex]
 
+def smartFeatureExtractor(game, board, player):
+    # Extracts and returns features as a dict
+    features = collections.defaultdict(int)
+    features[myLongestPath] = game.longestPath(board, player)
+    features[yourLongestPath] = game.longestPath(board, game.otherPlayer(player))
+    pieces = game.countAllPieces(board, player)
+    features.update(pieces)
+    return features
+
 
 def featureExtractor(game, board, player):
+    # Extracts and returns features as a list
     myLongestPath = game.longestPath(board, player)
     yourLongestPath = game.longestPath(board, game.otherPlayer(player))
     myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces = game.countPieces(board, player)

@@ -97,7 +97,7 @@
 		};
 		var monteCarloTreeSearch = function (game, state) {
 			var rootNode = Node (state, list ([]), 0, 0, null, null);
-			var count = 500000;
+			var count = 250000;
 			var node = rootNode;
 			for (var i = 0; i < count; i++) {
 				var node = select (node);
@@ -908,7 +908,7 @@
 				var __iterable0__ = legalMoves;
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var action = __iterable0__ [__index0__];
-					__accu0__.append (value (game, game.simulatedMove (tuple ([tempBoard, player]), action), depth, false));
+					__accu0__.append (valueExpectimax (game, game.simulatedMove (tuple ([tempBoard, player]), action), depth, false));
 				}
 				return __accu0__;
 			} ();
