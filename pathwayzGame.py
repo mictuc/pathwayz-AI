@@ -332,57 +332,109 @@ class PathwayzGame:
         return (myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces-yourNumPieces)
 
     def countAllPieces(self, board, player):
-        pieces = collections.defaultdict(int)
+        pieces = dict(float)
+        pieces['myTotal'] = 0
+        pieces['yourTotal'] = 0
+        pieces['myPerm'] = 0
+        pieces['yourPerm'] = 0
         for i,j in [(i, j) for j in range(12) for i in range(8)]:
             if board[i][j] == player.upper():
-                pieces[myPerm] += 1
-                pieces[myTotal] += 1
+                pieces['myPerm'] += 1
+                pieces['myTotal'] += 1
             elif board[i][j] == self.otherPlayer(player).upper():
-                pieces[yourPerm] += 1
-                pieces[yourTotal] += 1
+                pieces['yourPerm'] += 1
+                pieces['yourTotal'] += 1
             elif board[i][j] == player:
-                pieces[myTotal] += 1
+                pieces['myTotal'] += 1
                 numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
                 if numEmptyNeighbors == 0:
-                    pieces[myPerm] += 1
+                    pieces['myPerm'] += 1
                 elif numEmptyNeighbors == 1:
-                    pieces[my1Empty] += 1
+                    if 'my1Empty' in pieces:
+                        pieces['my1Empty'] += 1
+                    else:
+                        pieces['my1Empty'] = 1
                 elif numEmptyNeighbors == 2:
-                    pieces[my2Empty] += 1
+                    if 'my2Empty' in pieces:
+                        pieces['my2Empty'] += 1
+                    else:
+                        pieces['my2Empty'] = 1
                 elif numEmptyNeighbors == 3:
-                    pieces[my3Empty] += 1
+                    if 'my3Empty' in pieces:
+                        pieces['my3Empty'] += 1
+                    else:
+                        pieces['my3Empty'] = 1
                 elif numEmptyNeighbors == 4:
-                    pieces[my4Empty] += 1
+                    if 'my4Empty' in pieces:
+                        pieces['my4Empty'] += 1
+                    else:
+                        pieces['my4Empty'] = 1
                 elif numEmptyNeighbors == 5:
-                    pieces[my5Empty] += 1
+                    if 'my5Empty' in pieces:
+                        pieces['my5Empty'] += 1
+                    else:
+                        pieces['my5Empty'] = 1
                 elif numEmptyNeighbors == 6:
-                    pieces[my6Empty] += 1
+                    if 'my5Empty' in pieces:
+                        pieces['my5Empty'] += 1
+                    else:
+                        pieces['my5Empty'] = 1
                 elif numEmptyNeighbors == 7:
-                    pieces[my7Empty] += 1
+                    if 'my7Empty' in pieces:
+                        pieces['my7Empty'] += 1
+                    else:
+                        pieces['my7Empty'] = 1
                 elif numEmptyNeighbors == 8:
-                    pieces[my8Empty] += 1
+                    if 'my8Empty' in pieces:
+                        pieces['my8Empty'] += 1
+                    else:
+                        pieces['my8Empty'] = 1
             elif board[i][j] == self.otherPlayer(player):
-                pieces[yourTotal] += 1
+                pieces['yourTotal'] += 1
                 numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
                 if numEmptyNeighbors == 0:
-                    pieces[yourPerm] += 1
+                    pieces['yourPerm'] += 1
                 elif numEmptyNeighbors == 1:
-                    pieces[your1Empty] += 1
+                    if 'your1Empty' in pieces:
+                        pieces['your1Empty'] += 1
+                    else:
+                        pieces['your1Empty'] = 1
                 elif numEmptyNeighbors == 2:
-                    pieces[your2Empty] += 1
+                    if 'your2Empty' in pieces:
+                        pieces['your2Empty'] += 1
+                    else:
+                        pieces['your2Empty'] = 1
                 elif numEmptyNeighbors == 3:
-                    pieces[your3Empty] += 1
+                    if 'your3Empty' in pieces:
+                        pieces['your3Empty'] += 1
+                    else:
+                        pieces['your3Empty'] = 1
                 elif numEmptyNeighbors == 4:
-                    pieces[your4Empty] += 1
+                    if 'your4Empty' in pieces:
+                        pieces['your4Empty'] += 1
+                    else:
+                        pieces['your4Empty'] = 1
                 elif numEmptyNeighbors == 5:
-                    pieces[your5Empty] += 1
+                    if 'your5Empty' in pieces:
+                        pieces['your5Empty'] += 1
+                    else:
+                        pieces['your5Empty'] = 1
                 elif numEmptyNeighbors == 6:
-                    pieces[your6Empty] += 1
+                    if 'your6Empty' in pieces:
+                        pieces['your6Empty'] += 1
+                    else:
+                        pieces['your6Empty'] = 1
                 elif numEmptyNeighbors == 7:
-                    pieces[your7Empty] += 1
+                    if 'your7Empty' in pieces:
+                        pieces['your7Empty'] += 1
+                    else:
+                        pieces['your7Empty'] = 1
                 elif numEmptyNeighbors == 8:
-                    pieces[your8Empty] += 1
-        return (myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces-yourNumPieces)
+                    if 'your8Empty' in pieces:
+                        pieces['your8Empty'] += 1
+                    else:
+                        pieces['your8Empty'] = 1
+        return pieces
 
     def getNumEmptyNeighbors(self, row, col, board):
         neighbors = self.surroundingPlaces(row, col)
@@ -406,44 +458,81 @@ class PathwayzGame:
         return flipPotential
 
     def getAllFlipPotentials(self, board, player):
-        flipPotentials = collections.defaultdict(int)
+        pieces = dict(float)
+        pieces['my1Flip'] = 0
+        pieces['my2Flip'] = 0
+        pieces['my3Flip'] = 0
+        pieces['your1Flip'] = 0
+        pieces['your2Flip'] = 0
+        pieces['your3Flip'] = 0
         for i,j in [(i, j) for j in range(12) for i in range(8)]:
             if board[i][j] == '-':
                 flipPotential = self.getFlipPotential(i, j, board, player)
                 if flipPotential > 0:
                     if flipPotential == 1:
-                        pieces[my1Flip] += 1
+                        pieces['my1Flip'] += 1
                     elif flipPotential == 2:
-                        pieces[my2Flip] += 1
+                        pieces['my2Flip'] += 1
                     elif flipPotential == 3:
-                        pieces[my3Flip] += 1
+                        pieces['my3Flip'] += 1
                     elif flipPotential == 4:
-                        pieces[my4Flip] += 1
+                        if 'my4Flip' in pieces:
+                            pieces['my4Flip'] += 1
+                        else:
+                            pieces['my4Flip'] = 1
                     elif flipPotential == 5:
-                        pieces[my5Flip] += 1
+                        if 'my5Flip' in pieces:
+                            pieces['my5Flip'] += 1
+                        else:
+                            pieces['my5Flip'] = 1
                     elif flipPotential == 6:
-                        pieces[my6Flip] += 1
+                        if 'my6Flip' in pieces:
+                            pieces['my6Flip'] += 1
+                        else:
+                            pieces['my6Flip'] = 1
                     elif flipPotential == 7:
-                        pieces[my7Flip] += 1
+                        if 'my7Flip' in pieces:
+                            pieces['my7Flip'] += 1
+                        else:
+                            pieces['my7Flip'] = 1
                     elif flipPotential == 8:
-                        pieces[my8Flip] += 1
+                        if 'my8Flip' in pieces:
+                            pieces['my8Flip'] += 1
+                        else:
+                            pieces['my8Flip'] = 1
                 elif flipPotential < 0:
                     if flipPotential == -1:
-                        pieces[your1Flip] += 1
+                        pieces['your1Flip'] += 1
                     elif flipPotential == -2:
-                        pieces[your2Flip] += 1
+                        pieces['your2Flip'] += 1
                     elif flipPotential == -3:
-                        pieces[your3Flip] += 1
+                        pieces['your3Flip'] += 1
                     elif flipPotential == -4:
-                        pieces[your4Flip] += 1
+                        if 'your4Flip' in pieces:
+                            pieces['your4Flip'] += 1
+                        else:
+                            pieces['your4Flip'] = 1
                     elif flipPotential == -5:
-                        pieces[your5Flip] += 1
+                        if 'your5Flip' in pieces:
+                            pieces['your5Flip'] += 1
+                        else:
+                            pieces['your5Flip'] = 1
                     elif flipPotential == -6:
-                        pieces[your6Flip] += 1
+                        if 'your6Flip' in pieces:
+                            pieces['your6Flip'] += 1
+                        else:
+                            pieces['your6Flip'] = 1
                     elif flipPotential == -7:
-                        pieces[your7Flip] += 1
+                        if 'your7Flip' in pieces:
+                            pieces['your7Flip'] += 1
+                        else:
+                            pieces['your7Flip'] = 1
                     elif flipPotential == -8:
-                        pieces[your8Flip] += 1
+                        if 'your8Flip' in pieces:
+                            pieces['your8Flip'] += 1
+                        else:
+                            pieces['your8Flip'] = 1
+        return pieces
 
 game = PathwayzGame()
 
@@ -592,6 +681,29 @@ def beamScores(game, state, depth, beamWidth):
         newTopScores.append((evaluationFunction(game, lastState[0], player), action, lastState))
     return newTopScores
 
+
+def beamScoresSmart(game, state, depth, beamWidth):
+    board, player = state
+    if game.isEnd(state) or depth == 0:
+        return [(smartEvaluationFunction(game, board, player), None, state)]
+    actions = shuffle(game.actions(state))
+    numTopScores = beamWidth[depth-1]
+    if numTopScores == None: numTopScores = len(actions)
+    topScores = [(-float('inf'), None, None) for i in range(numTopScores)]
+    newStates = []
+    for action in actions:
+        newBoard, newPlayer = game.simulatedMove(state, action)
+        newScore = smartEvaluationFunction(game, newBoard, player)
+        minScore = sorted(topScores, key=lambda score: score[0])[0]
+        if newScore > minScore[0]:
+            topScores.remove(minScore)
+            topScores.append((newScore, action, (newBoard, newPlayer)))
+    newTopScores = []
+    for score, action, newState in topScores:
+        _, _, lastState = sorted(beamScores(game, newState, depth-1, beamWidth), key=lambda score: score[0], reverse=True)[0]
+        newTopScores.append((smartEvaluationFunction(game, lastState[0], player), action, lastState))
+    return newTopScores
+
 def beamMinimax(game, state):
     board, player = state
     if oneMoveAway(game, board, game.otherPlayer(player)):
@@ -601,6 +713,18 @@ def beamMinimax(game, state):
         depth = 3
         beamWidth = [1, 5, 15]
     scores = beamScores(game, state, depth, beamWidth)
+    _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
+    return bestMove
+
+def beamMinimaxMoreFeatures(game, state):
+    board, player = state
+    if oneMoveAway(game, board, game.otherPlayer(player)):
+        depth = 2
+        beamWidth = [None, None]
+    else:
+        depth = 3
+        beamWidth = [1, 5, 15]
+    scores = beamScoresSmart(game, state, depth, beamWidth)
     _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
     return bestMove
 
@@ -668,27 +792,78 @@ def evaluationFunction(game, board, player):
 
 def smartFeatureExtractor(game, board, player):
     # Extracts and returns features as a dict
-    features = collections.defaultdict(int)
-    features[myLongestPath] = game.longestPath(board, player)
-    features[yourLongestPath] = game.longestPath(board, game.otherPlayer(player))
+    features = dict(int)
+    features['myLongestPath'] = game.longestPath(board, player)
+    features['yourLongestPath'] = game.longestPath(board, game.otherPlayer(player))
     pieces = game.countAllPieces(board, player)
     features.update(pieces)
     flipPotentials = game.getAllFlipPotentials(board, player)
     features.update(flipPotentials)
+    #print(features)
     return features
+
+def initSmartFeatureWeights():
+    weights = dict(float)
+    weights['myLongestPath'] = 20
+    weights['yourLongestPath'] = -8
+    weights['myPerm'] = 5
+    weights['yourPerm'] = -5
+    weights['myTotal'] = 1
+    weights['yourTotal'] = -1
+    weights['my1Empty'] = -0.2
+    weights['your1Empty'] = 0.2
+    weights['my2Empty'] = 0.2
+    weights['your2Empty'] = -0.2
+    weights['my3Empty'] = 0
+    weights['your3Empty'] = 0
+    weights['my4Empty'] = 0.2
+    weights['your4Empty'] = -0.2
+    weights['my5Empty'] = 0.2
+    weights['your5Empty'] = -0.2
+    weights['my6Empty'] = 0.2
+    weights['your6Empty'] = -0.2
+    weights['my7Empty'] = 0.2
+    weights['your7Empty'] = -0.2
+    weights['my8Empty'] = 0.2
+    weights['your8Empty'] = -0.2
+    weights['my1Flip'] = 0
+    weights['your1Flip'] = 0
+    weights['my2Flip'] = 0
+    weights['your2Flip'] = 0
+    weights['my3Flip'] = 0.2
+    weights['your3Flip'] = -0.2
+    weights['my4Flip'] = 0.2
+    weights['your4Flip'] = -0.2
+    weights['my5Flip'] = 0.2
+    weights['your5Flip'] = -0.2
+    weights['my6Flip'] = 0.2
+    weights['your6Flip'] = -0.2
+    weights['my7Flip'] = 0.2
+    weights['your7Flip'] = -0.2
+    weights['my8Flip'] = 0.2
+    weights['your8Flip'] = -0.2
+    return weights
+
 
 def smartEvaluationFunction(game, board, player):
     features = smartFeatureExtractor(game, board, player)
-    weights = defaultdict(float)
-    # TODO: add weights
-    return 0
+    #print(features)
+    weights = initSmartFeatureWeights()
+    #print(weights)
+    values = {features[k] * weights[k] for k in features.keys()}
+    #print(values)
+    value = sum(values)
+    if game.isEnd((board, player)):
+        return game.utility((board, player)) + value
+    #print(value)
+    return value
 
 class GameManager():
     def __init__(self):
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch, 'PAI MCTS':monteCarloTreeSearch}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Advanced Beam Minimax':beamMinimaxMoreFeatures, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch, 'PAI MCTS':monteCarloTreeSearch}
         self.displayBoard()
         self.isAI = {'w':False, 'b':False}
 
