@@ -82,7 +82,7 @@ def MCTSdepthCharge (game,node,originalPlayer,depth):
 
 def monteCarloTreeSearch(game,state):
     rootNode = Node(state,[],0,0,None,None)
-    count = 25000
+    count = 250000
     node = rootNode
     for i in range(count):
         node = select(node)
@@ -855,155 +855,60 @@ def smartEvaluationFunction(game, board, player):
     #print(value)
     return value
 
-class GameManager():
-    def __init__(self):
-        # Initializes GameManager object
-        self.game = PathwayzGame()
-        self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Advanced Beam Minimax':beamMinimaxMoreFeatures, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch, 'PAI MCTS':monteCarloTreeSearch}
-        self.displayBoard()
-        self.isAI = {'w':False, 'b':False}
 
-    def setPlayers(self):
-        # Initializes player policies and names
-        player1Policy = document.getElementById("player1").value
-        player1Name = document.getElementById("player1name").value
-        player2Policy = document.getElementById("player2").value
-        player2Name = document.getElementById("player2name").value
-        self.playerNames = {'w':player1Name, 'b':player2Name}
-        self.isAI = {'w':player1Policy!='Human', 'b':player2Policy!='Human'}
-        self.policy = {'w':self.policies[player1Policy], 'b':self.policies[player2Policy]}
 
-    def isAITurn(self):
-        return self.isAI[self.game.player(self.state)]
-
-    def AITurn(self):
-        # Make's AI's move
-        if not self.isAITurn() or self.game.isEnd(self.state):
-            return
-        player = self.game.player(self.state)
-        policy = self.policy[player]
-        action = policy(self.game, self.state)
-        self.state = game.succ(self.state, action)
-        self.displayBoard(self.coordinatesToSqNo(action))
-        if self.game.isEnd(self.state):
-            if self.game.isWinner(self.state, player):
-                self.displayWinner(player)
-            elif self.game.isWinner(self.state, self.game.otherPlayer(player)):
-                self.displayWinner(self.game.otherPlayer(player))
-            else:
-                self.displayDraw()
-
-    def humanMove(self, sqNo):
-        # Takes in the square number selected by the player and if able, plays
-        # the player's piece at the square
-        if self.game.isEnd(self.state):
-            print('Game is over.')
-            return
-        if self.isAITurn():
-            print('Wait your turn.')
-            return
-        row, col = self.sqNoToCoordinates(sqNo)
-        if not self.game.emptyPlace(self.state, row, col):
-            print('Place is already taken.')
-            return
-        player = self.game.player(self.state)
-        permanent = document.getElementById("switch_perm").checked
-        self.state = game.succ(self.state, (row, col, permanent))
-        self.displayBoard(sqNo)
-        if self.game.isEnd(self.state):
-            if self.game.isWinner(self.state, player):
-                self.displayWinner(player)
-            elif self.game.isWinner(self.state, self.game.otherPlayer(player)):
-                self.displayWinner(self.game.otherPlayer(player))
-            else:
-                self.displayDraw()
-
-    def coordinatesToSqNo(self, action):
-        # Takes in an action and returns corresponding square number
-        row, col, _ = action
-        return ((12 * row) + col)
-
-    def sqNoToCoordinates(self, sqNo):
-        # Takes in square number and returns corresponding coordinates
-        row = int(sqNo / 12)
-        col = sqNo % 12
-        return row, col
-
-    def displayBoard(self, fadeIn=-1):
-        # Displays the board state in the GUI
-        board, _ = self.state
-        squares = document.getElementsByClassName('square')
-        for square in squares:
-            self.refreshSquare(square, board, fadeIn == square.getAttribute("sqid"))
-
-    def refreshSquare(self, square, board, fadeIn):
-        # Updates the given square on the GUI based on the given board
-        sqNo = square.getAttribute("sqid")
-        row, col = self.sqNoToCoordinates(sqNo)
-        pieceType = board[row][col]
-        while (square.firstChild):
-            square.removeChild(square.firstChild)
-        if pieceType == '-': return
-        piece = document.createElement("div")
-        square.appendChild(piece)
-        dot = document.createElement("div")
-        if pieceType == 'W' or pieceType == 'B':
-            dot.classList.add("cdot")
-            piece.appendChild(dot)
-        if pieceType == 'w' or pieceType == 'W':
-            piece.classList.add("whitepiece")
-        elif pieceType == 'b' or pieceType == 'B':
-            piece.classList.add("blackpiece")
-        if (fadeIn):
-            piece.classList.add("animated");
-            piece.classList.add("justPlayed");
-            piece.classList.add("fadeIn");
-
-    def resetGame(self):
-        # Resets the game
-        self.game = PathwayzGame()
-        self.state = game.startState()
-        self.displayBoard()
-        self.displayStartMenu()
-
-    def showModal(self):
-        # Shows the modal window in the GUI
-        document.getElementById("modal").style.visibility = 'visible'
-        document.getElementById("modal").style.opacity = '1'
-        document.getElementById("modal").style.top = '50%'
-
-    def displayStartMenu(self):
-        # Displays the start menu in the GUI
-        self.setStartMenuText()
-        self.showModal()
-
-    def setStartMenuText(self):
-        # Sets modal up for start menu
-        document.getElementById("modaltitle").innerHTML = "Setup Game";
-        document.getElementById("modalInformation").innerHTML = "<h2>Player 1</h2><br><select class=\"soflow\" id=\"player1\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type=\"text\" style=\"display: inline;\" id=\"player1name\" value=\"Player 1\"><br><h2>Player 2</h2><br><select class=\"soflow\" id=\"player2\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option></select><input type=\"text\" style=\"display: inline;\" id=\"player2name\" value=\"Player 2\"><br><a href=\"#\" onclick=\"closeModal(); pathwayzGame.gameManager.setPlayers();\">Start Game</a></div>";
-
-    def displayWinner(self, player):
-        # Displays winner modal in the GUI
-        self.setWinText(player)
-        self.showModal()
-
-    def setWinText(self, player):
-        # Sets modal up for winner
-        document.getElementById("modaltitle").innerHTML = 'Game Over!'
-        document.getElementById("modalInformation").innerHTML = '<p>{} wins!!</p><a href=\"#\" onclick=\"closeModal();\">Close</a></div>'.format(self.playerNames[player])
-
-    def displayDraw(self):
-        # Displays draw modal in the GUI
-        self.setDrawText()
-        self.showModal()
-
-    def setDrawText(self):
-        # Sets modal up for draw
-        document.getElementById("modaltitle").innerHTML = 'Game Over!'
-        document.getElementById("modalInformation").innerHTML = '<p>Draw! No one wins!</p><a href=\"#\" onclick=\"closeModal();\">Close</a></div>'
+def playPathwayz():
+    policies = {'w':monteCarloTreeSearch, 'b':monteCarloSearch}
+    playerNames = {'w': 'MCTS', 'b':'MCS'}
+    game = PathwayzGame()
+    state = game.startState()
+    count = 0
+    while count < 5:
+        while not game.isEnd(state):
+            player = game.player(state)
+            policy = policies[player]
+            action = policy(game, state)
+            state = game.succ(state, action)
+            printStatus(game,state,action,playerNames)
+        count += 1
+        state = game.startState()
+        print(count)
+    print("SWITCH SIDES")
+    policies = {'b':monteCarloTreeSearch, 'w':monteCarloSearch}
+    playerNames = {'w': 'MCTS', 'b':'MCS'}
+    game = PathwayzGame()
+    state = game.startState()
+    count = 0
+    while count < 5:
+        while not game.isEnd(state):
+            player = game.player(state)
+            policy = policies[player]
+            action = policy(game, state)
+            state = game.succ(state, action)
+            printStatus(game,state,action,playerNames)
+        count += 1
+        print(count)
+        state = game.startState()
 
 
 
 
-gameManager = GameManager()
+
+def printStatus(self, state, action, playerNames):
+        board, player = state
+        row, col, permanent = action
+        # permanentOutput = 'permanent' if permanent else 'regular'
+        # playLocation = '(%d,%c)' % (row+1, chr(ord('A')+col))
+        # print('%s put a %s piece at %s') \
+        #     % (playerNames[self.otherPlayer(player)], permanentOutput, playLocation)
+        # self.printBoard(state)
+        if self.isWinner(state, player):
+            print('%s wins!!!' % playerNames[player])
+        elif self.isWinner(state, self.otherPlayer(player)):
+            print('%s wins!!!' % playerNames[self.otherPlayer(player)])
+        elif self.fullBoard(state):
+            print('Board is full. Draw.')
+
+playPathwayz()
+
+
