@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-10 15:55:16
+// Transcrypt'ed from Python, 2017-11-12 14:30:34
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -2687,7 +2687,7 @@ function pathwayzGame () {
 			var sortedChildren = sorted (sortedChildren, __kwargtrans__ ({key: (function __lambda__ (score) {
 				return score.utility;
 			}), reverse: true}));
-			node.children = sortedChildren.__getslice__ (0, 30, 1);
+			node.children = sortedChildren.__getslice__ (0, 10, 1);
 			return node;
 		};
 		var selectfn = function (node) {
@@ -2729,7 +2729,7 @@ function pathwayzGame () {
 		};
 		var monteCarloTreeSearch = function (game, state) {
 			var rootNode = Node (state, list ([]), 0, 0, null, null);
-			var count = 100000;
+			var count = 500000;
 			var node = rootNode;
 			for (var i = 0; i < count; i++) {
 				var node = select (node);

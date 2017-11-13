@@ -43,7 +43,7 @@ def expand (game, node):
         sortedChildren.append(newNode)
     sortedChildren = sorted(sortedChildren, key=lambda score: score.utility, reverse=True)
 
-    node.children = sortedChildren[:30]
+    node.children = sortedChildren[:10]
 
     return node
 
@@ -82,7 +82,7 @@ def MCTSdepthCharge (game,node,originalPlayer,depth):
 
 def monteCarloTreeSearch(game,state):
     rootNode = Node(state,[],0,0,None,None)
-    count = 100000
+    count = 250000
     node = rootNode
     for i in range(count):
         node = select(node)
