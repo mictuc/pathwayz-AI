@@ -393,6 +393,58 @@ class PathwayzGame:
                 numEmptyNeighbors += 1
         return numEmptyNeighbors
 
+    def getFlipPotential(self, row, col, board, player):
+        neighbors = self.surroundingPlaces(row, col)
+        flipPotential = 0
+        otherPlayer = self.otherPlayer(player)
+        for neighbor in neighbors:
+            i, j = neighbor
+            if board[i][j] == otherPlayer:
+                flipPotential += 1
+            elif board[i][j] == player:
+                flipPotential -= 1
+        return flipPotential
+
+    def getAllFlipPotentials(self, board, player):
+        flipPotentials = collections.defaultdict(int)
+        for i,j in [(i, j) for j in range(12) for i in range(8)]:
+            if board[i][j] == '-':
+                flipPotential = self.getFlipPotential(i, j, board, player)
+                if flipPotential > 0:
+                    if flipPotential == 1:
+                        pieces[my1Flip] += 1
+                    elif flipPotential == 2:
+                        pieces[my2Flip] += 1
+                    elif flipPotential == 3:
+                        pieces[my3Flip] += 1
+                    elif flipPotential == 4:
+                        pieces[my4Flip] += 1
+                    elif flipPotential == 5:
+                        pieces[my5Flip] += 1
+                    elif flipPotential == 6:
+                        pieces[my6Flip] += 1
+                    elif flipPotential == 7:
+                        pieces[my7Flip] += 1
+                    elif flipPotential == 8:
+                        pieces[my8Flip] += 1
+                elif flipPotential < 0:
+                    if flipPotential == -1:
+                        pieces[your1Flip] += 1
+                    elif flipPotential == -2:
+                        pieces[your2Flip] += 1
+                    elif flipPotential == -3:
+                        pieces[your3Flip] += 1
+                    elif flipPotential == -4:
+                        pieces[your4Flip] += 1
+                    elif flipPotential == -5:
+                        pieces[your5Flip] += 1
+                    elif flipPotential == -6:
+                        pieces[your6Flip] += 1
+                    elif flipPotential == -7:
+                        pieces[your7Flip] += 1
+                    elif flipPotential == -8:
+                        pieces[your8Flip] += 1
+
 game = PathwayzGame()
 
 def randomMove(game, state):
@@ -597,16 +649,6 @@ def advancedExpectimax(game, state):
     chosenIndex = random.choice(bestIndices) # Pick randomly among the best
     return legalMoves[chosenIndex]
 
-def smartFeatureExtractor(game, board, player):
-    # Extracts and returns features as a dict
-    features = collections.defaultdict(int)
-    features[myLongestPath] = game.longestPath(board, player)
-    features[yourLongestPath] = game.longestPath(board, game.otherPlayer(player))
-    pieces = game.countAllPieces(board, player)
-    features.update(pieces)
-    return features
-
-
 def featureExtractor(game, board, player):
     # Extracts and returns features as a list
     myLongestPath = game.longestPath(board, player)
@@ -623,6 +665,23 @@ def evaluationFunction(game, board, player):
     if game.isEnd((board,player)):
         return game.utility((board,player)) + sum(results)
     return sum(results)
+
+def smartFeatureExtractor(game, board, player):
+    # Extracts and returns features as a dict
+    features = collections.defaultdict(int)
+    features[myLongestPath] = game.longestPath(board, player)
+    features[yourLongestPath] = game.longestPath(board, game.otherPlayer(player))
+    pieces = game.countAllPieces(board, player)
+    features.update(pieces)
+    flipPotentials = game.getAllFlipPotentials(board, player)
+    features.update(flipPotentials)
+    return features
+
+def smartEvaluationFunction(game, board, player):
+    features = smartFeatureExtractor(game, board, player)
+    weights = defaultdict(float)
+    # TODO: add weights
+    return 0
 
 class GameManager():
     def __init__(self):
