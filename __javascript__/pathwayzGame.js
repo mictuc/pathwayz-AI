@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-12 22:11:34
+// Transcrypt'ed from Python, 2017-11-13 15:32:16
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3333,7 +3333,35 @@ function pathwayzGame () {
 							}
 						}
 					}
+					var __iterable1__ = pieces.py_items ();
+					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
+						var __left0__ = __iterable1__ [__index1__];
+						var key = __left0__ [0];
+						var value = __left0__ [1];
+						pieces [key] = value / 96.0;
+					}
 				}
+				return pieces;
+			});},
+			get countNumCols () {return __get__ (this, function (self, board, player) {
+				var pieces = dict (float);
+				pieces ['myCols'] = 0;
+				pieces ['yourCols'] = 0;
+				var otherPlayer = self.otherPlayer (player);
+				for (var j = 0; j < 12; j++) {
+					for (var i = 0; i < 8; i++) {
+						if (board [i] [j].lower () == player) {
+							pieces ['myCols']++;
+							break;
+						}
+						else if (board [i] [j].lower () == otherPlayer) {
+							pieces ['yourCols']++;
+							break;
+						}
+					}
+				}
+				pieces ['myCols'] = pieces ['myCols'] / 12.0;
+				pieces ['yourCols'] = pieces ['yourCols'] / 12.0;
 				return pieces;
 			});},
 			get getNumEmptyNeighbors () {return __get__ (this, function (self, row, col, board) {
@@ -3495,6 +3523,13 @@ function pathwayzGame () {
 								}
 							}
 						}
+					}
+					var __iterable1__ = pieces;
+					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
+						var __left0__ = __iterable1__ [__index1__];
+						var key = __left0__ [0];
+						var value = __left0__ [1];
+						pieces [key] = value / 96.0;
 					}
 				}
 				return pieces;
@@ -3984,8 +4019,10 @@ function pathwayzGame () {
 		};
 		var smartFeatureExtractor = function (game, board, player) {
 			var features = dict (int);
-			features ['myLongestPath'] = game.longestPath (board, player);
-			features ['yourLongestPath'] = game.longestPath (board, game.otherPlayer (player));
+			features ['myLongestPath'] = game.longestPath (board, player) / 12.0;
+			features ['yourLongestPath'] = game.longestPath (board, game.otherPlayer (player)) / 12.0;
+			var cols = game.countNumCols (board, player);
+			features.py_update (cols);
 			var pieces = game.countAllPieces (board, player);
 			features.py_update (pieces);
 			var flipPotentials = game.getAllFlipPotentials (board, player);
@@ -3996,42 +4033,44 @@ function pathwayzGame () {
 			var weights = dict (float);
 			weights ['myLongestPath'] = 20;
 			weights ['yourLongestPath'] = -(8);
-			weights ['myPerm'] = 5;
-			weights ['yourPerm'] = -(5);
-			weights ['myTotal'] = 1;
-			weights ['yourTotal'] = -(1);
-			weights ['my1Empty'] = -(0.2);
-			weights ['your1Empty'] = 0.2;
+			weights ['myCols'] = 2;
+			weights ['yourCols'] = -(2);
+			weights ['myPerm'] = 3;
+			weights ['yourPerm'] = -(6);
+			weights ['myTotal'] = 0.5;
+			weights ['yourTotal'] = -(0.5);
+			weights ['my1Empty'] = -(0.1);
+			weights ['your1Empty'] = 0.1;
 			weights ['my2Empty'] = 0.2;
 			weights ['your2Empty'] = -(0.2);
 			weights ['my3Empty'] = 0;
 			weights ['your3Empty'] = 0;
-			weights ['my4Empty'] = 0.2;
-			weights ['your4Empty'] = -(0.2);
-			weights ['my5Empty'] = 0.2;
-			weights ['your5Empty'] = -(0.2);
-			weights ['my6Empty'] = 0.2;
-			weights ['your6Empty'] = -(0.2);
-			weights ['my7Empty'] = 0.2;
-			weights ['your7Empty'] = -(0.2);
-			weights ['my8Empty'] = 0.2;
-			weights ['your8Empty'] = -(0.2);
+			weights ['my4Empty'] = 0;
+			weights ['your4Empty'] = 0;
+			weights ['my5Empty'] = 0;
+			weights ['your5Empty'] = 0;
+			weights ['my6Empty'] = 0;
+			weights ['your6Empty'] = 0;
+			weights ['my7Empty'] = 0;
+			weights ['your7Empty'] = 0;
+			weights ['my8Empty'] = 0;
+			weights ['your8Empty'] = 0;
 			weights ['my1Flip'] = 0;
 			weights ['your1Flip'] = 0;
 			weights ['my2Flip'] = 0;
 			weights ['your2Flip'] = 0;
-			weights ['my3Flip'] = 0.2;
-			weights ['your3Flip'] = -(0.2);
-			weights ['my4Flip'] = 0.2;
-			weights ['your4Flip'] = -(0.2);
-			weights ['my5Flip'] = 0.2;
-			weights ['your5Flip'] = -(0.2);
-			weights ['my6Flip'] = 0.2;
-			weights ['your6Flip'] = -(0.2);
-			weights ['my7Flip'] = 0.2;
-			weights ['your7Flip'] = -(0.2);
-			weights ['my8Flip'] = 0.2;
-			weights ['your8Flip'] = -(0.2);
+			weights ['my3Flip'] = 0.01;
+			weights ['your3Flip'] = -(0.01);
+			weights ['my4Flip'] = 0.01;
+			weights ['your4Flip'] = -(0.01);
+			weights ['my5Flip'] = 0.01;
+			weights ['your5Flip'] = -(0.01);
+			weights ['my6Flip'] = 0.01;
+			weights ['your6Flip'] = -(0.01);
+			weights ['my7Flip'] = 0.01;
+			weights ['your7Flip'] = -(0.01);
+			weights ['my8Flip'] = 0.01;
+			weights ['your8Flip'] = -(0.01);
 			return weights;
 		};
 		var smartEvaluationFunction = function (game, board, player) {
