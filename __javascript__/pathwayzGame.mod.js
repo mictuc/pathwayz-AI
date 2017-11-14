@@ -76,7 +76,7 @@
 					return ;
 				}
 				else {
-					backpropagate (node, -(evaluationFunction (game, state [0], state [1])));
+					backpropagate (node, -(evaluationFunction (game, state [0], game.otherPlayer (state [1]))));
 					return ;
 				}
 			}
@@ -97,7 +97,7 @@
 		};
 		var monteCarloTreeSearch = function (game, state) {
 			var rootNode = Node (state, list ([]), 0, 0, null, null);
-			var count = 250000;
+			var count = 25000;
 			var node = rootNode;
 			for (var i = 0; i < count; i++) {
 				var node = select (node);
@@ -136,8 +136,9 @@
 			for (var i = 0; i < len (children); i++) {
 				var move = children [i];
 				var monteScore = 0;
+				var newState = game.simulatedMove (state, move [0]);
 				for (var j = 0; j < count; j++) {
-					monteScore += depthCharge (game, state, player);
+					monteScore += depthCharge (game, newState, false);
 				}
 				var monteScore = float (monteScore) / count;
 				childrenScores.append (tuple ([move, monteScore]));
@@ -148,7 +149,6 @@
 			var __left0__ = childrenScores [0];
 			var bestMove = __left0__ [0];
 			var _ = __left0__ [1];
-			print (bestMove);
 			return bestMove [0];
 		};
 		var depthCharge = function (game, state, originalPlayer) {
@@ -160,16 +160,11 @@
 					return evaluationFunction (game, board, player);
 				}
 				else {
-					return -(evaluationFunction (game, board, player));
+					return -(evaluationFunction (game, board, game.otherPlayer (player)));
 				}
 			}
-			if (random.random () < 0.3) {
-				var nextMove = advancedBaselineMove (game, state);
-			}
-			else {
-				var moves = game.actions (state);
-				var nextMove = random.choice (moves);
-			}
+			var moves = game.actions (state);
+			var nextMove = random.choice (moves);
 			var newState = game.simulatedMove (state, nextMove);
 			return depthCharge (game, newState, !(originalPlayer));
 		};
@@ -717,13 +712,18 @@
 				pieces ['yourCols'] = 0;
 				var otherPlayer = self.otherPlayer (player);
 				for (var j = 0; j < 12; j++) {
+					var foundMine = false;
+					var foundYours = false;
 					for (var i = 0; i < 8; i++) {
-						if (board [i] [j].lower () == player) {
+						if (!(foundMine) && board [i] [j].lower () == player) {
 							pieces ['myCols']++;
-							break;
+							var foundMine = true;
 						}
-						else if (board [i] [j].lower () == otherPlayer) {
+						else if (!(foundYours) && board [i] [j].lower () == otherPlayer) {
 							pieces ['yourCols']++;
+							var foundYours = true;
+						}
+						if (foundMine && foundYours) {
 							break;
 						}
 					}
@@ -1262,9 +1262,22 @@
 				var beamWidth = list ([1, 5, 15]);
 			}
 			var scores = beamScoresSmart (game, state, depth, beamWidth);
-			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
-				return score [0];
-			}), reverse: true})) [0];
+			var bestScore = -(float ('inf'));
+			var bestIndices = list ([]);
+			for (var i = 0; i < len (scores); i++) {
+				var __left0__ = scores [i];
+				var score = __left0__ [0];
+				var move = __left0__ [1];
+				var _ = __left0__ [2];
+				if (score > bestScore) {
+					var bestScore = score;
+					var bestIndices = list ([i]);
+				}
+				else if (score == bestScore) {
+					bestIndices.append (i);
+				}
+			}
+			var __left0__ = scores [random.choice (bestIndices)];
 			var _ = __left0__ [0];
 			var bestMove = __left0__ [1];
 			var _ = __left0__ [2];
@@ -1287,7 +1300,7 @@
 					return evaluationFunction (game, board, player);
 				}
 				else {
-					return -(evaluationFunction (game, board, player));
+					return -(evaluationFunction (game, board, game.otherPlayer (player)));
 				}
 			}
 			else if (originalPlayer) {
