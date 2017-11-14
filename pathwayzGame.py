@@ -599,6 +599,42 @@ def advancedBaselineMove(game, state):
         return randomMove(game, state)
     return random.choice(options)
 
+def featuresMove(game, state):
+    _, player = state
+    bestScore = 0
+    options = []
+    actions = game.actions(state)
+    for action in actions:
+        newState = game.simulatedMove(state, action)
+        newBoard, _ = newState
+        newScore = evaluationFunction(game, newBoard, player)
+        if newScore > bestScore:
+            bestScore = newScore
+            options = [action]
+        elif newScore == bestScore:
+            options.append(action)
+    if len(options) == 0:
+        return randomMove(game, state)
+    return random.choice(options)
+
+def smartFeaturesMove(game, state):
+    _, player = state
+    bestScore = 0
+    options = []
+    actions = game.actions(state)
+    for action in actions:
+        newState = game.simulatedMove(state, action)
+        newBoard, _ = newState
+        newScore = smartEvaluationFunction(game, newBoard, player)
+        if newScore > bestScore:
+            bestScore = newScore
+            options = [action]
+        elif newScore == bestScore:
+            options.append(action)
+    if len(options) == 0:
+        return randomMove(game, state)
+    return random.choice(options)
+
 def value(game, state, depth, alpha, beta, originalPlayer):
     board, player = state
     if game.isEnd(state) or depth == 0:
@@ -898,7 +934,7 @@ class GameManager():
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Advanced Beam Minimax':beamMinimaxMoreFeatures, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch, 'PAI MCTS':monteCarloTreeSearch}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Features':featuresMove, 'PAI Advanced Features':smartFeaturesMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Advanced Beam Minimax':beamMinimaxMoreFeatures, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch, 'PAI MCTS':monteCarloTreeSearch}
         self.displayBoard()
         self.isAI = {'w':False, 'b':False}
 

@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-13 16:20:46
+// Transcrypt'ed from Python, 2017-11-14 11:31:28
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3595,6 +3595,62 @@ function pathwayzGame () {
 			}
 			return random.choice (options);
 		};
+		var featuresMove = function (game, state) {
+			var __left0__ = state;
+			var _ = __left0__ [0];
+			var player = __left0__ [1];
+			var bestScore = 0;
+			var options = list ([]);
+			var actions = game.actions (state);
+			var __iterable0__ = actions;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var action = __iterable0__ [__index0__];
+				var newState = game.simulatedMove (state, action);
+				var __left0__ = newState;
+				var newBoard = __left0__ [0];
+				var _ = __left0__ [1];
+				var newScore = evaluationFunction (game, newBoard, player);
+				if (newScore > bestScore) {
+					var bestScore = newScore;
+					var options = list ([action]);
+				}
+				else if (newScore == bestScore) {
+					options.append (action);
+				}
+			}
+			if (len (options) == 0) {
+				return randomMove (game, state);
+			}
+			return random.choice (options);
+		};
+		var smartFeaturesMove = function (game, state) {
+			var __left0__ = state;
+			var _ = __left0__ [0];
+			var player = __left0__ [1];
+			var bestScore = 0;
+			var options = list ([]);
+			var actions = game.actions (state);
+			var __iterable0__ = actions;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var action = __iterable0__ [__index0__];
+				var newState = game.simulatedMove (state, action);
+				var __left0__ = newState;
+				var newBoard = __left0__ [0];
+				var _ = __left0__ [1];
+				var newScore = smartEvaluationFunction (game, newBoard, player);
+				if (newScore > bestScore) {
+					var bestScore = newScore;
+					var options = list ([action]);
+				}
+				else if (newScore == bestScore) {
+					options.append (action);
+				}
+			}
+			if (len (options) == 0) {
+				return randomMove (game, state);
+			}
+			return random.choice (options);
+		};
 		var value = function (game, state, depth, alpha, beta, originalPlayer) {
 			var __left0__ = state;
 			var board = __left0__ [0];
@@ -4108,7 +4164,7 @@ function pathwayzGame () {
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
-				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Advanced Beam Minimax': beamMinimaxMoreFeatures, 'PAI Expectimax': advancedExpectimax, 'PAI MCS': monteCarloSearch, 'PAI MCTS': monteCarloTreeSearch});
+				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Features': featuresMove, 'PAI Advanced Features': smartFeaturesMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Advanced Beam Minimax': beamMinimaxMoreFeatures, 'PAI Expectimax': advancedExpectimax, 'PAI MCS': monteCarloSearch, 'PAI MCTS': monteCarloTreeSearch});
 				self.displayBoard ();
 				self.isAI = dict ({'w': false, 'b': false});
 			});},
@@ -4296,6 +4352,7 @@ function pathwayzGame () {
 			__all__.evaluationFunction = evaluationFunction;
 			__all__.expand = expand;
 			__all__.featureExtractor = featureExtractor;
+			__all__.featuresMove = featuresMove;
 			__all__.game = game;
 			__all__.gameManager = gameManager;
 			__all__.initSmartFeatureWeights = initSmartFeatureWeights;
@@ -4309,6 +4366,7 @@ function pathwayzGame () {
 			__all__.shuffle = shuffle;
 			__all__.smartEvaluationFunction = smartEvaluationFunction;
 			__all__.smartFeatureExtractor = smartFeatureExtractor;
+			__all__.smartFeaturesMove = smartFeaturesMove;
 			__all__.value = value;
 			__all__.valueExpectimax = valueExpectimax;
 		__pragma__ ('</all>')
