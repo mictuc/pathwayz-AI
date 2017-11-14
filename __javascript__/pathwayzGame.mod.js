@@ -696,13 +696,13 @@
 							}
 						}
 					}
-					var __iterable1__ = pieces.py_items ();
-					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
-						var __left0__ = __iterable1__ [__index1__];
-						var key = __left0__ [0];
-						var value = __left0__ [1];
-						pieces [key] = value / 96.0;
-					}
+				}
+				var __iterable0__ = pieces.py_items ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var key = __left0__ [0];
+					var value = __left0__ [1];
+					pieces [key] = value / 96.0;
 				}
 				return pieces;
 			});},
@@ -892,13 +892,13 @@
 							}
 						}
 					}
-					var __iterable1__ = pieces;
-					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
-						var __left0__ = __iterable1__ [__index1__];
-						var key = __left0__ [0];
-						var value = __left0__ [1];
-						pieces [key] = value / 96.0;
-					}
+				}
+				var __iterable0__ = pieces;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var key = __left0__ [0];
+					var value = __left0__ [1];
+					pieces [key] = value / 96.0;
 				}
 				return pieces;
 			});}

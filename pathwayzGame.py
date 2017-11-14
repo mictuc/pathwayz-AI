@@ -431,8 +431,8 @@ class PathwayzGame:
                         pieces['your8Empty'] += 1
                     else:
                         pieces['your8Empty'] = 1
-            for key, value in pieces.items():
-                pieces[key] = value / 96.0
+        for key, value in pieces.items():
+            pieces[key] = value / 96.0
         return pieces
 
     def countNumCols(self, board, player):
@@ -553,8 +553,8 @@ class PathwayzGame:
                             pieces['your8Flip'] += 1
                         else:
                             pieces['your8Flip'] = 1
-            for key, value in pieces:
-                pieces[key] = value / 96.0
+        for key, value in pieces:
+            pieces[key] = value / 96.0
         return pieces
 
 game = PathwayzGame()
@@ -887,7 +887,6 @@ def smartEvaluationFunction(game, board, player):
     weights = initSmartFeatureWeights()
     #print(weights)
     values = {features[k] * weights[k] for k in features.keys()}
-    #print(values)
     value = sum(values)
     if game.isEnd((board, player)):
         return game.utility((board, player)) + value

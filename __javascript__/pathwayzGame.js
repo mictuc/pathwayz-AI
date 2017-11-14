@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-13 16:01:57
+// Transcrypt'ed from Python, 2017-11-13 16:20:46
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3328,13 +3328,13 @@ function pathwayzGame () {
 							}
 						}
 					}
-					var __iterable1__ = pieces.py_items ();
-					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
-						var __left0__ = __iterable1__ [__index1__];
-						var key = __left0__ [0];
-						var value = __left0__ [1];
-						pieces [key] = value / 96.0;
-					}
+				}
+				var __iterable0__ = pieces.py_items ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var key = __left0__ [0];
+					var value = __left0__ [1];
+					pieces [key] = value / 96.0;
 				}
 				return pieces;
 			});},
@@ -3524,13 +3524,13 @@ function pathwayzGame () {
 							}
 						}
 					}
-					var __iterable1__ = pieces;
-					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
-						var __left0__ = __iterable1__ [__index1__];
-						var key = __left0__ [0];
-						var value = __left0__ [1];
-						pieces [key] = value / 96.0;
-					}
+				}
+				var __iterable0__ = pieces;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var key = __left0__ [0];
+					var value = __left0__ [1];
+					pieces [key] = value / 96.0;
 				}
 				return pieces;
 			});}
