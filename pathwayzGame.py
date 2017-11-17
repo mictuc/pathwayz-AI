@@ -323,7 +323,7 @@ def beamScoresSmart(game, state, depth, beamWidth):
             topScores.append((newScore, action, (newBoard, newPlayer)))
     newTopScores = []
     for score, action, newState in topScores:
-        _, _, lastState = sorted(beamScores(game, newState, depth-1, beamWidth), key=lambda score: score[0], reverse=True)[0]
+        _, _, lastState = sorted(beamScoresSmart(game, newState, depth-1, beamWidth), key=lambda score: score[0], reverse=True)[0]
         newTopScores.append((smartEvaluationFunction(game, lastState[0], player), action, lastState))
     return newTopScores
 

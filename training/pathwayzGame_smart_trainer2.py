@@ -838,28 +838,32 @@ class smartPAI:
 #         print '%s WINS!' % (state[1])
 #         return state[1]
 
-def playGame(game, PAI, PAI2, PAI1_starts):
+def playGame(game, PAI1, PAI2, PAI1_starts):
     state = game.startState()
     oldState = None
     while not (game.isEnd(state)):
         newState = game.succ(state, PAI1.move(game, state))
-        game.printBoard(newState)
+        #game.printBoard(newState)
         if oldState != None:
+            # game, player, oldBoard, newBoard
             PAI2.updateWeights(game, newState[1], oldState[0], newState[0])
         oldState = state
         state = newState
         if game.isEnd(state):
-            PAI1.updateWeights(game, oldState[1], oldState[0], state[0])
+            #PAI1.updateWeights(game, oldState[1], oldState[0], state[0])
             break
 
-        newState = game.succ(state, baselineMove(game, state))
-        game.printBoard(newState)
+
+        newState = game.succ(state, advancedBaselineMove(game, state))
+        #game.printBoard(newState)
         PAI1.updateWeights(game, newState[1], oldState[0], newState[0])
         oldState = state
         state = newState
+
         if game.isEnd(state):
-            PAI2.updateWeights(game, oldState[1], oldState[0], state[0])
+            #PAI2.updateWeights(game, oldState[1], oldState[0], state[0])
             break
+
 
     # state = game.startState()
     #
@@ -912,14 +916,15 @@ def playGame(game, PAI, PAI2, PAI1_starts):
 #     else:
 #         return state[1]
 
-PAI1 = smartPAI(weightFile='SmartPAI1_weights2000.txt')
-PAI2 = smartPAI()
+#PAI1 = smartPAI(weightFile='SmartPAI1_weights2000.txt')
+PAI1 = smartPAI(weightFile='SmartPAI1_weights_test50.txt')
+PAI2 = smartPAI(weightFile='SmartPAI2_weights_test50.txt')
 # gameStats = []
 start_time = time.time()
 wins = {'PAI1':0, 'PAI2':0, 'Draw':0}
-numGames = 1
+numGames = 51
 for i in range(numGames):
-    winner = playGame(game, PAI1, PAI2, i % 2 == 0)
+    winner = playGame(game, PAI0, PAI0, i % 2 == 0)
     if i % 2 == 0:
         if winner == 'w':
             wins['PAI1'] += 1
@@ -935,22 +940,24 @@ for i in range(numGames):
         else:
             wins['Draw'] += 1
 
-    if i%500 == 0:
+    if i%5 == 0:
         print(i)
 
-    if (i%1000) == 0:
-        fileName = 'SmartPAI1_weights%d.txt' % (i)
+    if (i%50) == 0:
+        fileName = 'SmartPAI0_weights_test%d.txt' % (i+50)
         f = open(fileName, 'w')
-        json.dump(PAI1.weights, f)
+        json.dump(PAI0.weights, f)
         f.close()
-        fileName = 'SmartPAI2_weights%d.txt' % (i)
+        fileName = 'SmartPAI2_weights_test%d.txt' % (i+50)
         f = open(fileName, 'w')
         json.dump(PAI2.weights, f)
         f.close()
+        
 
 
-
+"""
 print 'smartPAI 1 won %s percent' % (1.0 * wins['PAI1'] / numGames)
 print 'smartPAI 2 won %s percent' % (1.0 * wins['PAI2'] / numGames)
 print 'Draw %s percent' % (1.0 * wins['Draw'] / numGames)
 print '%d games were played in %s seconds' % (numGames, int(time.time() - start_time))
+"""
