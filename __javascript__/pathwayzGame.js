@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-14 11:31:28
+// Transcrypt'ed from Python, 2017-11-16 20:06:01
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -396,9 +396,7 @@ function pathwayzGame () {
 					var map = function (func, iterable) {
 						return function () {
 							var __accu0__ = [];
-							var __iterable0__ = iterable;
-							for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-								var item = __iterable0__ [__index0__];
+							for (var item of iterable) {
 								__accu0__.append (func (item));
 							}
 							return __accu0__;
@@ -410,9 +408,7 @@ function pathwayzGame () {
 						}
 						return function () {
 							var __accu0__ = [];
-							var __iterable0__ = iterable;
-							for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-								var item = __iterable0__ [__index0__];
+							for (var item of iterable) {
 								if (func (item)) {
 									__accu0__.append (item);
 								}
@@ -458,9 +454,7 @@ function pathwayzGame () {
 							}
 							self.buffer = '{}{}{}'.format (self.buffer, sep.join (function () {
 								var __accu0__ = [];
-								var __iterable0__ = args;
-								for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-									var arg = __iterable0__ [__index0__];
+								for (var arg of args) {
 									__accu0__.append (str (arg));
 								}
 								return __accu0__;
@@ -472,9 +466,7 @@ function pathwayzGame () {
 							else {
 								console.log (sep.join (function () {
 									var __accu0__ = [];
-									var __iterable0__ = args;
-									for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-										var arg = __iterable0__ [__index0__];
+									for (var arg of args) {
 										__accu0__.append (str (arg));
 									}
 									return __accu0__;
@@ -2800,742 +2792,6 @@ function pathwayzGame () {
 			var newState = game.simulatedMove (state, nextMove);
 			return depthCharge (game, newState, !(originalPlayer));
 		};
-		var PathwayzGame = __class__ ('PathwayzGame', [object], {
-			get __init__ () {return __get__ (this, function (self) {
-				// pass;
-			});},
-			get startState () {return __get__ (this, function (self) {
-				var board = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 8; j++) {
-						__accu0__.append (function () {
-							var __accu1__ = [];
-							for (var i = 0; i < 12; i++) {
-								__accu1__.append ('-');
-							}
-							return __accu1__;
-						} ());
-					}
-					return __accu0__;
-				} ();
-				var startingPlayer = 'w';
-				return tuple ([board, startingPlayer]);
-			});},
-			get isEnd () {return __get__ (this, function (self, state) {
-				var __left0__ = state;
-				var board = __left0__ [0];
-				var player = __left0__ [1];
-				return self.playerWon (board, player) || self.playerWon (board, self.otherPlayer (player)) || self.fullBoard (state);
-			});},
-			get fullBoard () {return __get__ (this, function (self, state) {
-				var __left0__ = state;
-				var board = __left0__ [0];
-				var player = __left0__ [1];
-				for (var i = 0; i < 8; i++) {
-					for (var j = 0; j < 12; j++) {
-						if (board [i] [j] == '-') {
-							return false;
-						}
-					}
-				}
-				return true;
-			});},
-			get isWinner () {return __get__ (this, function (self, state, player) {
-				var __left0__ = state;
-				var board = __left0__ [0];
-				var _ = __left0__ [1];
-				return self.playerWon (board, player);
-			});},
-			get utility () {return __get__ (this, function (self, state) {
-				var __left0__ = state;
-				var board = __left0__ [0];
-				var player = __left0__ [1];
-				if (self.isWinner (state, player)) {
-					return 1000000.0;
-				}
-				else if (self.isWinner (state, self.otherPlayer (player))) {
-					return -(1000000.0);
-				}
-				else {
-					return 0;
-				}
-			});},
-			get actions () {return __get__ (this, function (self, state) {
-				var __left0__ = state;
-				var board = __left0__ [0];
-				var player = __left0__ [1];
-				var actions = list ([]);
-				var __iterable0__ = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 12; j++) {
-						for (var i = 0; i < 8; i++) {
-							__accu0__.append (tuple ([i, j]));
-						}
-					}
-					return __accu0__;
-				} ();
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (self.emptyPlace (state, i, j)) {
-						actions.append (tuple ([i, j, true]));
-						actions.append (tuple ([i, j, false]));
-					}
-				}
-				return actions;
-			});},
-			get player () {return __get__ (this, function (self, state) {
-				var __left0__ = state;
-				var _ = __left0__ [0];
-				var player = __left0__ [1];
-				return player;
-			});},
-			get succ () {return __get__ (this, function (self, state, action) {
-				var __left0__ = state;
-				var board = __left0__ [0];
-				var player = __left0__ [1];
-				var __left0__ = action;
-				var row = __left0__ [0];
-				var col = __left0__ [1];
-				var permanent = __left0__ [2];
-				if (!(row < 8 && row >= 0 && col < 12 && col >= 0)) {
-					var __except0__ = Exception ('Row, column out of bounds.');
-					__except0__.__cause__ = null;
-					throw __except0__;
-				}
-				else if (!(self.emptyPlace (state, row, col))) {
-					var __except0__ = Exception ('Position is already played.');
-					__except0__.__cause__ = null;
-					throw __except0__;
-				}
-				else if (permanent) {
-					board [row] [col] = self.otherPlayer (player).upper ();
-					self.flipPieces (board, row, col);
-					return tuple ([board, self.otherPlayer (player)]);
-				}
-				else {
-					board [row] [col] = player;
-					return tuple ([board, self.otherPlayer (player)]);
-				}
-			});},
-			get emptyPlace () {return __get__ (this, function (self, state, row, col) {
-				var __left0__ = state;
-				var board = __left0__ [0];
-				var _ = __left0__ [1];
-				return board [row] [col] == '-';
-			});},
-			get otherPlayer () {return __get__ (this, function (self, player) {
-				if (player == 'w') {
-					return 'b';
-				}
-				else if (player == 'b') {
-					return 'w';
-				}
-				else {
-					var __except0__ = Exception ('Not valid player');
-					__except0__.__cause__ = null;
-					throw __except0__;
-				}
-			});},
-			get flipPieces () {return __get__ (this, function (self, board, row, col) {
-				var __iterable0__ = self.surroundingPlaces (row, col);
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (board [i] [j] == 'b' || board [i] [j] == 'w') {
-						board [i] [j] = self.otherPlayer (board [i] [j]);
-					}
-				}
-			});},
-			get surroundingPlaces () {return __get__ (this, function (self, row, col) {
-				var rows = function () {
-					var __accu0__ = [];
-					for (var i = row - 1; i < row + 2; i++) {
-						if (i >= 0 && i < 8) {
-							__accu0__.append (i);
-						}
-					}
-					return __accu0__;
-				} ();
-				var cols = function () {
-					var __accu0__ = [];
-					for (var j = col - 1; j < col + 2; j++) {
-						if (j >= 0 && j < 12) {
-							__accu0__.append (j);
-						}
-					}
-					return __accu0__;
-				} ();
-				return function () {
-					var __accu0__ = [];
-					var __iterable0__ = rows;
-					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-						var i = __iterable0__ [__index0__];
-						var __iterable1__ = cols;
-						for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
-							var j = __iterable1__ [__index1__];
-							__accu0__.append (tuple ([i, j]));
-						}
-					}
-					return __accu0__;
-				} ();
-			});},
-			get findPathLength () {return __get__ (this, function (self, board, player, row, col, test) {
-				var farthestCol = -(1);
-				var __iterable0__ = self.surroundingPlaces (row, col);
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					test++;
-					if (board [i] [j].lower () == player) {
-						if (j > farthestCol) {
-							var farthestCol = j;
-						}
-						if (j == 11) {
-							return 11;
-						}
-						else if (!(self.alreadyChecked [i] [j])) {
-							self.alreadyChecked [i] [j] = true;
-							var maxCol = self.findPathLength (board, player, i, j, test);
-							if (maxCol > farthestCol) {
-								var farthestCol = maxCol;
-							}
-						}
-					}
-				}
-				return farthestCol;
-			});},
-			get longestPath () {return __get__ (this, function (self, board, player) {
-				self.alreadyChecked = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 8; j++) {
-						__accu0__.append (function () {
-							var __accu1__ = [];
-							for (var i = 0; i < 12; i++) {
-								__accu1__.append (false);
-							}
-							return __accu1__;
-						} ());
-					}
-					return __accu0__;
-				} ();
-				var longestPath = -(1);
-				var test = 0;
-				var __iterable0__ = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 12; j++) {
-						for (var i = 0; i < 8; i++) {
-							__accu0__.append (tuple ([i, j]));
-						}
-					}
-					return __accu0__;
-				} ();
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (board [i] [j].lower () == player) {
-						if (!(self.alreadyChecked [i] [j])) {
-							self.alreadyChecked [i] [j] = true;
-							var newPath = self.findPathLength (board, player, i, j, test) - j;
-							if (newPath > longestPath) {
-								var longestPath = newPath;
-							}
-						}
-					}
-					if (longestPath == 11) {
-						return 12;
-					}
-				}
-				return longestPath + 1;
-			});},
-			get playerWon () {return __get__ (this, function (self, board, player) {
-				self.alreadyChecked = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 8; j++) {
-						__accu0__.append (function () {
-							var __accu1__ = [];
-							for (var i = 0; i < 12; i++) {
-								__accu1__.append (false);
-							}
-							return __accu1__;
-						} ());
-					}
-					return __accu0__;
-				} ();
-				var longestPath = -(1);
-				var test = 0;
-				var j = 0;
-				for (var i = 0; i < 8; i++) {
-					if (board [i] [j].lower () == player) {
-						if (!(self.alreadyChecked [i] [j])) {
-							self.alreadyChecked [i] [j] = true;
-							var newPath = self.findPathLength (board, player, i, j, test) - j;
-							if (newPath > longestPath) {
-								var longestPath = newPath;
-							}
-						}
-					}
-					if (longestPath == 11) {
-						return true;
-					}
-				}
-				return longestPath == 11;
-			});},
-			get simulatedMove () {return __get__ (this, function (self, state, action) {
-				var __left0__ = state;
-				var board = __left0__ [0];
-				var player = __left0__ [1];
-				var tempBoard = function () {
-					var __accu0__ = [];
-					var __iterable0__ = board;
-					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-						var row = __iterable0__ [__index0__];
-						__accu0__.append (row.__getslice__ (0, null, 1));
-					}
-					return __accu0__;
-				} ();
-				return self.succ (tuple ([tempBoard, player]), action);
-			});},
-			get countPieces () {return __get__ (this, function (self, board, player) {
-				var myNumPermanents = 0;
-				var yourNumPermanents = 0;
-				var myNum1EmptyNeighbor = 0;
-				var yourNum1EmptyNeighbor = 0;
-				var myNum2EmptyNeighbor = 0;
-				var yourNum2EmptyNeighbor = 0;
-				var myNumPieces = 0;
-				var yourNumPieces = 0;
-				var __iterable0__ = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 12; j++) {
-						for (var i = 0; i < 8; i++) {
-							__accu0__.append (tuple ([i, j]));
-						}
-					}
-					return __accu0__;
-				} ();
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (board [i] [j] == player.upper ()) {
-						myNumPermanents++;
-						myNumPieces++;
-					}
-					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
-						yourNumPermanents++;
-						yourNumPieces++;
-					}
-					else if (board [i] [j] == player) {
-						myNumPieces++;
-						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
-						if (numEmptyNeighbors == 0) {
-							myNumPermanents++;
-						}
-						else if (numEmptyNeighbors == 1) {
-							myNum1EmptyNeighbor++;
-						}
-						else if (numEmptyNeighbors == 2) {
-							myNum2EmptyNeighbor++;
-						}
-					}
-					else if (board [i] [j] == self.otherPlayer (player)) {
-						yourNumPieces++;
-						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
-						if (numEmptyNeighbors == 0) {
-							yourNumPermanents++;
-						}
-						else if (numEmptyNeighbors == 1) {
-							yourNum1EmptyNeighbor++;
-						}
-						else if (numEmptyNeighbors == 2) {
-							yourNum2EmptyNeighbor++;
-						}
-					}
-				}
-				return tuple ([myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces - yourNumPieces]);
-			});},
-			get countAllPieces () {return __get__ (this, function (self, board, player) {
-				var pieces = dict (float);
-				pieces ['myTotal'] = 0;
-				pieces ['yourTotal'] = 0;
-				pieces ['myPerm'] = 0;
-				pieces ['yourPerm'] = 0;
-				var __iterable0__ = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 12; j++) {
-						for (var i = 0; i < 8; i++) {
-							__accu0__.append (tuple ([i, j]));
-						}
-					}
-					return __accu0__;
-				} ();
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (board [i] [j] == player.upper ()) {
-						pieces ['myPerm']++;
-						pieces ['myTotal']++;
-					}
-					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
-						pieces ['yourPerm']++;
-						pieces ['yourTotal']++;
-					}
-					else if (board [i] [j] == player) {
-						pieces ['myTotal']++;
-						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
-						if (numEmptyNeighbors == 0) {
-							pieces ['myPerm']++;
-						}
-						else if (numEmptyNeighbors == 1) {
-							if (__in__ ('my1Empty', pieces)) {
-								pieces ['my1Empty']++;
-							}
-							else {
-								pieces ['my1Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 2) {
-							if (__in__ ('my2Empty', pieces)) {
-								pieces ['my2Empty']++;
-							}
-							else {
-								pieces ['my2Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 3) {
-							if (__in__ ('my3Empty', pieces)) {
-								pieces ['my3Empty']++;
-							}
-							else {
-								pieces ['my3Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 4) {
-							if (__in__ ('my4Empty', pieces)) {
-								pieces ['my4Empty']++;
-							}
-							else {
-								pieces ['my4Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 5) {
-							if (__in__ ('my5Empty', pieces)) {
-								pieces ['my5Empty']++;
-							}
-							else {
-								pieces ['my5Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 6) {
-							if (__in__ ('my5Empty', pieces)) {
-								pieces ['my5Empty']++;
-							}
-							else {
-								pieces ['my5Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 7) {
-							if (__in__ ('my7Empty', pieces)) {
-								pieces ['my7Empty']++;
-							}
-							else {
-								pieces ['my7Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 8) {
-							if (__in__ ('my8Empty', pieces)) {
-								pieces ['my8Empty']++;
-							}
-							else {
-								pieces ['my8Empty'] = 1;
-							}
-						}
-					}
-					else if (board [i] [j] == self.otherPlayer (player)) {
-						pieces ['yourTotal']++;
-						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
-						if (numEmptyNeighbors == 0) {
-							pieces ['yourPerm']++;
-						}
-						else if (numEmptyNeighbors == 1) {
-							if (__in__ ('your1Empty', pieces)) {
-								pieces ['your1Empty']++;
-							}
-							else {
-								pieces ['your1Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 2) {
-							if (__in__ ('your2Empty', pieces)) {
-								pieces ['your2Empty']++;
-							}
-							else {
-								pieces ['your2Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 3) {
-							if (__in__ ('your3Empty', pieces)) {
-								pieces ['your3Empty']++;
-							}
-							else {
-								pieces ['your3Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 4) {
-							if (__in__ ('your4Empty', pieces)) {
-								pieces ['your4Empty']++;
-							}
-							else {
-								pieces ['your4Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 5) {
-							if (__in__ ('your5Empty', pieces)) {
-								pieces ['your5Empty']++;
-							}
-							else {
-								pieces ['your5Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 6) {
-							if (__in__ ('your6Empty', pieces)) {
-								pieces ['your6Empty']++;
-							}
-							else {
-								pieces ['your6Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 7) {
-							if (__in__ ('your7Empty', pieces)) {
-								pieces ['your7Empty']++;
-							}
-							else {
-								pieces ['your7Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 8) {
-							if (__in__ ('your8Empty', pieces)) {
-								pieces ['your8Empty']++;
-							}
-							else {
-								pieces ['your8Empty'] = 1;
-							}
-						}
-					}
-				}
-				var __iterable0__ = pieces.py_items ();
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var key = __left0__ [0];
-					var value = __left0__ [1];
-					pieces [key] = value / 96.0;
-				}
-				return pieces;
-			});},
-			get countNumCols () {return __get__ (this, function (self, board, player) {
-				var pieces = dict (float);
-				pieces ['myCols'] = 0;
-				pieces ['yourCols'] = 0;
-				var otherPlayer = self.otherPlayer (player);
-				for (var j = 0; j < 12; j++) {
-					var foundMine = false;
-					var foundYours = false;
-					for (var i = 0; i < 8; i++) {
-						if (!(foundMine) && board [i] [j].lower () == player) {
-							pieces ['myCols']++;
-							var foundMine = true;
-						}
-						else if (!(foundYours) && board [i] [j].lower () == otherPlayer) {
-							pieces ['yourCols']++;
-							var foundYours = true;
-						}
-						if (foundMine && foundYours) {
-							break;
-						}
-					}
-				}
-				pieces ['myCols'] = pieces ['myCols'] / 12.0;
-				pieces ['yourCols'] = pieces ['yourCols'] / 12.0;
-				return pieces;
-			});},
-			get getNumEmptyNeighbors () {return __get__ (this, function (self, row, col, board) {
-				var neighbors = self.surroundingPlaces (row, col);
-				var numEmptyNeighbors = 0;
-				var __iterable0__ = neighbors;
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var neighbor = __iterable0__ [__index0__];
-					var __left0__ = neighbor;
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (board [i] [j] == '-') {
-						numEmptyNeighbors++;
-					}
-				}
-				return numEmptyNeighbors;
-			});},
-			get getFlipPotential () {return __get__ (this, function (self, row, col, board, player) {
-				var neighbors = self.surroundingPlaces (row, col);
-				var flipPotential = 0;
-				var otherPlayer = self.otherPlayer (player);
-				var __iterable0__ = neighbors;
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var neighbor = __iterable0__ [__index0__];
-					var __left0__ = neighbor;
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (board [i] [j] == otherPlayer) {
-						flipPotential++;
-					}
-					else if (board [i] [j] == player) {
-						flipPotential--;
-					}
-				}
-				return flipPotential;
-			});},
-			get getAllFlipPotentials () {return __get__ (this, function (self, board, player) {
-				var pieces = dict (float);
-				pieces ['my1Flip'] = 0;
-				pieces ['my2Flip'] = 0;
-				pieces ['my3Flip'] = 0;
-				pieces ['your1Flip'] = 0;
-				pieces ['your2Flip'] = 0;
-				pieces ['your3Flip'] = 0;
-				var __iterable0__ = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 12; j++) {
-						for (var i = 0; i < 8; i++) {
-							__accu0__.append (tuple ([i, j]));
-						}
-					}
-					return __accu0__;
-				} ();
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (board [i] [j] == '-') {
-						var flipPotential = self.getFlipPotential (i, j, board, player);
-						if (flipPotential > 0) {
-							if (flipPotential == 1) {
-								pieces ['my1Flip']++;
-							}
-							else if (flipPotential == 2) {
-								pieces ['my2Flip']++;
-							}
-							else if (flipPotential == 3) {
-								pieces ['my3Flip']++;
-							}
-							else if (flipPotential == 4) {
-								if (__in__ ('my4Flip', pieces)) {
-									pieces ['my4Flip']++;
-								}
-								else {
-									pieces ['my4Flip'] = 1;
-								}
-							}
-							else if (flipPotential == 5) {
-								if (__in__ ('my5Flip', pieces)) {
-									pieces ['my5Flip']++;
-								}
-								else {
-									pieces ['my5Flip'] = 1;
-								}
-							}
-							else if (flipPotential == 6) {
-								if (__in__ ('my6Flip', pieces)) {
-									pieces ['my6Flip']++;
-								}
-								else {
-									pieces ['my6Flip'] = 1;
-								}
-							}
-							else if (flipPotential == 7) {
-								if (__in__ ('my7Flip', pieces)) {
-									pieces ['my7Flip']++;
-								}
-								else {
-									pieces ['my7Flip'] = 1;
-								}
-							}
-							else if (flipPotential == 8) {
-								if (__in__ ('my8Flip', pieces)) {
-									pieces ['my8Flip']++;
-								}
-								else {
-									pieces ['my8Flip'] = 1;
-								}
-							}
-						}
-						else if (flipPotential < 0) {
-							if (flipPotential == -(1)) {
-								pieces ['your1Flip']++;
-							}
-							else if (flipPotential == -(2)) {
-								pieces ['your2Flip']++;
-							}
-							else if (flipPotential == -(3)) {
-								pieces ['your3Flip']++;
-							}
-							else if (flipPotential == -(4)) {
-								if (__in__ ('your4Flip', pieces)) {
-									pieces ['your4Flip']++;
-								}
-								else {
-									pieces ['your4Flip'] = 1;
-								}
-							}
-							else if (flipPotential == -(5)) {
-								if (__in__ ('your5Flip', pieces)) {
-									pieces ['your5Flip']++;
-								}
-								else {
-									pieces ['your5Flip'] = 1;
-								}
-							}
-							else if (flipPotential == -(6)) {
-								if (__in__ ('your6Flip', pieces)) {
-									pieces ['your6Flip']++;
-								}
-								else {
-									pieces ['your6Flip'] = 1;
-								}
-							}
-							else if (flipPotential == -(7)) {
-								if (__in__ ('your7Flip', pieces)) {
-									pieces ['your7Flip']++;
-								}
-								else {
-									pieces ['your7Flip'] = 1;
-								}
-							}
-							else if (flipPotential == -(8)) {
-								if (__in__ ('your8Flip', pieces)) {
-									pieces ['your8Flip']++;
-								}
-								else {
-									pieces ['your8Flip'] = 1;
-								}
-							}
-						}
-					}
-				}
-				var __iterable0__ = pieces;
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var key = __left0__ [0];
-					var value = __left0__ [1];
-					pieces [key] = value / 96.0;
-				}
-				return pieces;
-			});}
-		});
-		var game = PathwayzGame ();
 		var randomMove = function (game, state) {
 			return random.choice (game.actions (state));
 		};
@@ -4160,6 +3416,705 @@ function pathwayzGame () {
 			}
 			return value;
 		};
+		var PathwayzGame = __class__ ('PathwayzGame', [object], {
+			get __init__ () {return __get__ (this, function (self) {
+				// pass;
+			});},
+			get startState () {return __get__ (this, function (self) {
+				var board = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 8; j++) {
+						__accu0__.append (function () {
+							var __accu1__ = [];
+							for (var i = 0; i < 12; i++) {
+								__accu1__.append ('-');
+							}
+							return __accu1__;
+						} ());
+					}
+					return __accu0__;
+				} ();
+				var startingPlayer = 'w';
+				return tuple ([board, startingPlayer]);
+			});},
+			get isEnd () {return __get__ (this, function (self, state) {
+				var __left0__ = state;
+				var _ = __left0__ [0];
+				var player = __left0__ [1];
+				return self.isWinner (state, player) || self.isWinner (state, self.otherPlayer (player)) || self.fullBoard (state);
+			});},
+			get fullBoard () {return __get__ (this, function (self, state) {
+				var __left0__ = state;
+				var board = __left0__ [0];
+				var player = __left0__ [1];
+				for (var i = 0; i < 8; i++) {
+					for (var j = 0; j < 12; j++) {
+						if (board [i] [j] == '-') {
+							return false;
+						}
+					}
+				}
+				return true;
+			});},
+			get isWinner () {return __get__ (this, function (self, state, player) {
+				var __left0__ = state;
+				var board = __left0__ [0];
+				var _ = __left0__ [1];
+				return self.longestPath (board, player, __kwargtrans__ ({checkWinner: true})) == 12;
+			});},
+			get utility () {return __get__ (this, function (self, state) {
+				var __left0__ = state;
+				var _ = __left0__ [0];
+				var player = __left0__ [1];
+				if (self.isWinner (state, player)) {
+					return 1000000.0;
+				}
+				else if (self.isWinner (state, self.otherPlayer (player))) {
+					return -(1000000.0);
+				}
+				else {
+					return 0;
+				}
+			});},
+			get actions () {return __get__ (this, function (self, state) {
+				var actions = list ([]);
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (self.emptyPlace (state, i, j)) {
+						actions.append (tuple ([i, j, true]));
+						actions.append (tuple ([i, j, false]));
+					}
+				}
+				return actions;
+			});},
+			get succ () {return __get__ (this, function (self, state, action) {
+				var __left0__ = state;
+				var board = __left0__ [0];
+				var player = __left0__ [1];
+				var __left0__ = action;
+				var row = __left0__ [0];
+				var col = __left0__ [1];
+				var permanent = __left0__ [2];
+				if (!(row < 8 && row >= 0 && col < 12 && col >= 0)) {
+					var __except0__ = Exception ('Row, column out of bounds.');
+					__except0__.__cause__ = null;
+					throw __except0__;
+				}
+				else if (!(self.emptyPlace (state, row, col))) {
+					var __except0__ = Exception ('Position is already played.');
+					__except0__.__cause__ = null;
+					throw __except0__;
+				}
+				else if (permanent) {
+					board [row] [col] = self.otherPlayer (player).upper ();
+					self.flipPieces (board, row, col);
+					return tuple ([board, self.otherPlayer (player)]);
+				}
+				else {
+					board [row] [col] = player;
+					return tuple ([board, self.otherPlayer (player)]);
+				}
+			});},
+			get emptyPlace () {return __get__ (this, function (self, state, row, col) {
+				var __left0__ = state;
+				var board = __left0__ [0];
+				var _ = __left0__ [1];
+				return board [row] [col] == '-';
+			});},
+			get player () {return __get__ (this, function (self, state) {
+				return state [1];
+			});},
+			get otherPlayer () {return __get__ (this, function (self, player) {
+				if (player == 'w') {
+					return 'b';
+				}
+				else if (player == 'b') {
+					return 'w';
+				}
+				else {
+					var __except0__ = Exception ('Not valid player');
+					__except0__.__cause__ = null;
+					throw __except0__;
+				}
+			});},
+			get flipPieces () {return __get__ (this, function (self, board, row, col) {
+				var __iterable0__ = self.surroundingPlaces (row, col);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == 'b' || board [i] [j] == 'w') {
+						board [i] [j] = self.otherPlayer (board [i] [j]);
+					}
+				}
+			});},
+			get surroundingPlaces () {return __get__ (this, function (self, row, col) {
+				var rows = function () {
+					var __accu0__ = [];
+					for (var i = row - 1; i < row + 2; i++) {
+						if (i >= 0 && i < 8) {
+							__accu0__.append (i);
+						}
+					}
+					return __accu0__;
+				} ();
+				var cols = function () {
+					var __accu0__ = [];
+					for (var j = col - 1; j < col + 2; j++) {
+						if (j >= 0 && j < 12) {
+							__accu0__.append (j);
+						}
+					}
+					return __accu0__;
+				} ();
+				return function () {
+					var __accu0__ = [];
+					var __iterable0__ = rows;
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var i = __iterable0__ [__index0__];
+						var __iterable1__ = cols;
+						for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
+							var j = __iterable1__ [__index1__];
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+			});},
+			get findPathLength () {return __get__ (this, function (self, board, player, row, col) {
+				var farthestCol = -(1);
+				var __iterable0__ = self.surroundingPlaces (row, col);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j].lower () == player) {
+						if (j > farthestCol) {
+							var farthestCol = j;
+						}
+						if (j == 11) {
+							return 11;
+						}
+						else if (!(self.alreadyChecked [i] [j])) {
+							self.alreadyChecked [i] [j] = true;
+							var maxCol = self.findPathLength (board, player, i, j);
+							if (maxCol > farthestCol) {
+								var farthestCol = maxCol;
+							}
+						}
+					}
+				}
+				return farthestCol;
+			});},
+			get longestPath () {return __get__ (this, function (self, board, player, checkWinner) {
+				if (typeof checkWinner == 'undefined' || (checkWinner != null && checkWinner .hasOwnProperty ("__kwargtrans__"))) {;
+					var checkWinner = false;
+				};
+				self.alreadyChecked = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 8; j++) {
+						__accu0__.append (function () {
+							var __accu1__ = [];
+							for (var i = 0; i < 12; i++) {
+								__accu1__.append (false);
+							}
+							return __accu1__;
+						} ());
+					}
+					return __accu0__;
+				} ();
+				var longestPath = -(1);
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					var __iterable1__ = (!(checkWinner) ? range (12) : range (0));
+					for (var __index0__ = 0; __index0__ < __iterable1__.length; __index0__++) {
+						var j = __iterable1__ [__index0__];
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j].lower () == player) {
+						if (!(self.alreadyChecked [i] [j])) {
+							self.alreadyChecked [i] [j] = true;
+							var newPath = self.findPathLength (board, player, i, j) - j;
+							if (newPath > longestPath) {
+								var longestPath = newPath;
+							}
+						}
+					}
+					if (longestPath == 11) {
+						return 12;
+					}
+				}
+				return longestPath + 1;
+			});},
+			get simulatedMove () {return __get__ (this, function (self, state, action) {
+				var __left0__ = state;
+				var board = __left0__ [0];
+				var player = __left0__ [1];
+				var tempBoard = function () {
+					var __accu0__ = [];
+					var __iterable0__ = board;
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var row = __iterable0__ [__index0__];
+						__accu0__.append (row.__getslice__ (0, null, 1));
+					}
+					return __accu0__;
+				} ();
+				return self.succ (tuple ([tempBoard, player]), action);
+			});},
+			get countPieces () {return __get__ (this, function (self, board, player) {
+				var myNumPermanents = 0;
+				var yourNumPermanents = 0;
+				var myNum1EmptyNeighbor = 0;
+				var yourNum1EmptyNeighbor = 0;
+				var myNum2EmptyNeighbor = 0;
+				var yourNum2EmptyNeighbor = 0;
+				var myNumPieces = 0;
+				var yourNumPieces = 0;
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == player.upper ()) {
+						myNumPermanents++;
+						myNumPieces++;
+					}
+					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
+						yourNumPermanents++;
+						yourNumPieces++;
+					}
+					else if (board [i] [j] == player) {
+						myNumPieces++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							myNumPermanents++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							myNum1EmptyNeighbor++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							myNum2EmptyNeighbor++;
+						}
+					}
+					else if (board [i] [j] == self.otherPlayer (player)) {
+						yourNumPieces++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							yourNumPermanents++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							yourNum1EmptyNeighbor++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							yourNum2EmptyNeighbor++;
+						}
+					}
+				}
+				return tuple ([myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces - yourNumPieces]);
+			});},
+			get countAllPieces () {return __get__ (this, function (self, board, player) {
+				var pieces = dict (float);
+				pieces ['myTotal'] = 0;
+				pieces ['yourTotal'] = 0;
+				pieces ['myPerm'] = 0;
+				pieces ['yourPerm'] = 0;
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == player.upper ()) {
+						pieces ['myPerm']++;
+						pieces ['myTotal']++;
+					}
+					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
+						pieces ['yourPerm']++;
+						pieces ['yourTotal']++;
+					}
+					else if (board [i] [j] == player) {
+						pieces ['myTotal']++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							pieces ['myPerm']++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							if (__in__ ('my1Empty', pieces)) {
+								pieces ['my1Empty']++;
+							}
+							else {
+								pieces ['my1Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 2) {
+							if (__in__ ('my2Empty', pieces)) {
+								pieces ['my2Empty']++;
+							}
+							else {
+								pieces ['my2Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 3) {
+							if (__in__ ('my3Empty', pieces)) {
+								pieces ['my3Empty']++;
+							}
+							else {
+								pieces ['my3Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 4) {
+							if (__in__ ('my4Empty', pieces)) {
+								pieces ['my4Empty']++;
+							}
+							else {
+								pieces ['my4Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 5) {
+							if (__in__ ('my5Empty', pieces)) {
+								pieces ['my5Empty']++;
+							}
+							else {
+								pieces ['my5Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 6) {
+							if (__in__ ('my5Empty', pieces)) {
+								pieces ['my5Empty']++;
+							}
+							else {
+								pieces ['my5Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 7) {
+							if (__in__ ('my7Empty', pieces)) {
+								pieces ['my7Empty']++;
+							}
+							else {
+								pieces ['my7Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 8) {
+							if (__in__ ('my8Empty', pieces)) {
+								pieces ['my8Empty']++;
+							}
+							else {
+								pieces ['my8Empty'] = 1;
+							}
+						}
+					}
+					else if (board [i] [j] == self.otherPlayer (player)) {
+						pieces ['yourTotal']++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							pieces ['yourPerm']++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							if (__in__ ('your1Empty', pieces)) {
+								pieces ['your1Empty']++;
+							}
+							else {
+								pieces ['your1Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 2) {
+							if (__in__ ('your2Empty', pieces)) {
+								pieces ['your2Empty']++;
+							}
+							else {
+								pieces ['your2Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 3) {
+							if (__in__ ('your3Empty', pieces)) {
+								pieces ['your3Empty']++;
+							}
+							else {
+								pieces ['your3Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 4) {
+							if (__in__ ('your4Empty', pieces)) {
+								pieces ['your4Empty']++;
+							}
+							else {
+								pieces ['your4Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 5) {
+							if (__in__ ('your5Empty', pieces)) {
+								pieces ['your5Empty']++;
+							}
+							else {
+								pieces ['your5Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 6) {
+							if (__in__ ('your6Empty', pieces)) {
+								pieces ['your6Empty']++;
+							}
+							else {
+								pieces ['your6Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 7) {
+							if (__in__ ('your7Empty', pieces)) {
+								pieces ['your7Empty']++;
+							}
+							else {
+								pieces ['your7Empty'] = 1;
+							}
+						}
+						else if (numEmptyNeighbors == 8) {
+							if (__in__ ('your8Empty', pieces)) {
+								pieces ['your8Empty']++;
+							}
+							else {
+								pieces ['your8Empty'] = 1;
+							}
+						}
+					}
+				}
+				var __iterable0__ = pieces.py_items ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var key = __left0__ [0];
+					var value = __left0__ [1];
+					pieces [key] = value / 96.0;
+				}
+				return pieces;
+			});},
+			get countNumCols () {return __get__ (this, function (self, board, player) {
+				var pieces = dict (float);
+				pieces ['myCols'] = 0;
+				pieces ['yourCols'] = 0;
+				var otherPlayer = self.otherPlayer (player);
+				for (var j = 0; j < 12; j++) {
+					var foundMine = false;
+					var foundYours = false;
+					for (var i = 0; i < 8; i++) {
+						if (!(foundMine) && board [i] [j].lower () == player) {
+							pieces ['myCols']++;
+							var foundMine = true;
+						}
+						else if (!(foundYours) && board [i] [j].lower () == otherPlayer) {
+							pieces ['yourCols']++;
+							var foundYours = true;
+						}
+						if (foundMine && foundYours) {
+							break;
+						}
+					}
+				}
+				pieces ['myCols'] = pieces ['myCols'] / 12.0;
+				pieces ['yourCols'] = pieces ['yourCols'] / 12.0;
+				return pieces;
+			});},
+			get getNumEmptyNeighbors () {return __get__ (this, function (self, row, col, board) {
+				var neighbors = self.surroundingPlaces (row, col);
+				var numEmptyNeighbors = 0;
+				var __iterable0__ = neighbors;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var neighbor = __iterable0__ [__index0__];
+					var __left0__ = neighbor;
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == '-') {
+						numEmptyNeighbors++;
+					}
+				}
+				return numEmptyNeighbors;
+			});},
+			get getFlipPotential () {return __get__ (this, function (self, row, col, board, player) {
+				var neighbors = self.surroundingPlaces (row, col);
+				var flipPotential = 0;
+				var otherPlayer = self.otherPlayer (player);
+				var __iterable0__ = neighbors;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var neighbor = __iterable0__ [__index0__];
+					var __left0__ = neighbor;
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == otherPlayer) {
+						flipPotential++;
+					}
+					else if (board [i] [j] == player) {
+						flipPotential--;
+					}
+				}
+				return flipPotential;
+			});},
+			get getAllFlipPotentials () {return __get__ (this, function (self, board, player) {
+				var pieces = dict (float);
+				pieces ['my1Flip'] = 0;
+				pieces ['my2Flip'] = 0;
+				pieces ['my3Flip'] = 0;
+				pieces ['your1Flip'] = 0;
+				pieces ['your2Flip'] = 0;
+				pieces ['your3Flip'] = 0;
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == '-') {
+						var flipPotential = self.getFlipPotential (i, j, board, player);
+						if (flipPotential > 0) {
+							if (flipPotential == 1) {
+								pieces ['my1Flip']++;
+							}
+							else if (flipPotential == 2) {
+								pieces ['my2Flip']++;
+							}
+							else if (flipPotential == 3) {
+								pieces ['my3Flip']++;
+							}
+							else if (flipPotential == 4) {
+								if (__in__ ('my4Flip', pieces)) {
+									pieces ['my4Flip']++;
+								}
+								else {
+									pieces ['my4Flip'] = 1;
+								}
+							}
+							else if (flipPotential == 5) {
+								if (__in__ ('my5Flip', pieces)) {
+									pieces ['my5Flip']++;
+								}
+								else {
+									pieces ['my5Flip'] = 1;
+								}
+							}
+							else if (flipPotential == 6) {
+								if (__in__ ('my6Flip', pieces)) {
+									pieces ['my6Flip']++;
+								}
+								else {
+									pieces ['my6Flip'] = 1;
+								}
+							}
+							else if (flipPotential == 7) {
+								if (__in__ ('my7Flip', pieces)) {
+									pieces ['my7Flip']++;
+								}
+								else {
+									pieces ['my7Flip'] = 1;
+								}
+							}
+							else if (flipPotential == 8) {
+								if (__in__ ('my8Flip', pieces)) {
+									pieces ['my8Flip']++;
+								}
+								else {
+									pieces ['my8Flip'] = 1;
+								}
+							}
+						}
+						else if (flipPotential < 0) {
+							if (flipPotential == -(1)) {
+								pieces ['your1Flip']++;
+							}
+							else if (flipPotential == -(2)) {
+								pieces ['your2Flip']++;
+							}
+							else if (flipPotential == -(3)) {
+								pieces ['your3Flip']++;
+							}
+							else if (flipPotential == -(4)) {
+								if (__in__ ('your4Flip', pieces)) {
+									pieces ['your4Flip']++;
+								}
+								else {
+									pieces ['your4Flip'] = 1;
+								}
+							}
+							else if (flipPotential == -(5)) {
+								if (__in__ ('your5Flip', pieces)) {
+									pieces ['your5Flip']++;
+								}
+								else {
+									pieces ['your5Flip'] = 1;
+								}
+							}
+							else if (flipPotential == -(6)) {
+								if (__in__ ('your6Flip', pieces)) {
+									pieces ['your6Flip']++;
+								}
+								else {
+									pieces ['your6Flip'] = 1;
+								}
+							}
+							else if (flipPotential == -(7)) {
+								if (__in__ ('your7Flip', pieces)) {
+									pieces ['your7Flip']++;
+								}
+								else {
+									pieces ['your7Flip'] = 1;
+								}
+							}
+							else if (flipPotential == -(8)) {
+								if (__in__ ('your8Flip', pieces)) {
+									pieces ['your8Flip']++;
+								}
+								else {
+									pieces ['your8Flip'] = 1;
+								}
+							}
+						}
+					}
+				}
+				var __iterable0__ = pieces;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var key = __left0__ [0];
+					var value = __left0__ [1];
+					pieces [key] = value / 96.0;
+				}
+				return pieces;
+			});}
+		});
 		var GameManager = __class__ ('GameManager', [object], {
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
@@ -4291,6 +4246,7 @@ function pathwayzGame () {
 				}
 			});},
 			get resetGame () {return __get__ (this, function (self) {
+				self.isAI = dict ({'w': false, 'b': false});
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
 				self.displayBoard ();
@@ -4307,7 +4263,7 @@ function pathwayzGame () {
 			});},
 			get setStartMenuText () {return __get__ (this, function (self) {
 				document.getElementById ('modaltitle').innerHTML = 'Setup Game';
-				document.getElementById ('modalInformation').innerHTML = '<h2>Player 1</h2><br><select class="soflow" id="player1"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option></select><input type="text" style="display: inline;" id="player1name" value="Player 1"><br><h2>Player 2</h2><br><select class="soflow" id="player2"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option></select><input type="text" style="display: inline;" id="player2name" value="Player 2"><br><a href="#" onclick="closeModal(); pathwayzGame.gameManager.setPlayers();">Start Game</a></div>';
+				document.getElementById ('modalInformation').innerHTML = '<h2>Player 1</h2><br><select class="soflow" id="player1"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type="text" style="display: inline;" id="player1name" value="Player 1"><br><h2>Player 2</h2><br><select class="soflow" id="player2"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type="text" style="display: inline;" id="player2name" value="Player 2"><br><a href="#" onclick="closeModal(); pathwayzGame.gameManager.setPlayers();">Start Game</a></div>';
 			});},
 			get displayWinner () {return __get__ (this, function (self, player) {
 				self.setWinText (player);
@@ -4326,6 +4282,7 @@ function pathwayzGame () {
 				document.getElementById ('modalInformation').innerHTML = '<p>Draw! No one wins!</p><a href="#" onclick="closeModal();">Close</a></div>';
 			});}
 		});
+		var game = PathwayzGame ();
 		var gameManager = GameManager ();
 		__pragma__ ('<use>' +
 			'math' +
