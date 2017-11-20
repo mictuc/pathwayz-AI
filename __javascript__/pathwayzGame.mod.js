@@ -444,12 +444,12 @@
 			}
 			return false;
 		};
-		var beamScores = function (game, state, depth, beamWidth) {
+		var beamScores = function (game, state, depth, beamWidth, evalFunction) {
 			var __left0__ = state;
 			var board = __left0__ [0];
 			var player = __left0__ [1];
 			if (game.isEnd (state) || depth == 0) {
-				return list ([tuple ([evaluationFunction (game, board, player), null, state])]);
+				return list ([tuple ([evalFunction (game, board, player), null, state])]);
 			}
 			var actions = shuffle (game.actions (state));
 			var numTopScores = beamWidth [depth - 1];
@@ -470,7 +470,7 @@
 				var __left0__ = game.simulatedMove (state, action);
 				var newBoard = __left0__ [0];
 				var newPlayer = __left0__ [1];
-				var newScore = evaluationFunction (game, newBoard, player);
+				var newScore = evalFunction (game, newBoard, player);
 				var minScore = sorted (topScores, __kwargtrans__ ({key: (function __lambda__ (score) {
 					return score [0];
 				})})) [0];
@@ -486,65 +486,13 @@
 				var score = __left0__ [0];
 				var action = __left0__ [1];
 				var newState = __left0__ [2];
-				var __left0__ = sorted (beamScores (game, newState, depth - 1, beamWidth), __kwargtrans__ ({key: (function __lambda__ (score) {
+				var __left0__ = sorted (beamScores (game, newState, depth - 1, beamWidth, evalFunction), __kwargtrans__ ({key: (function __lambda__ (score) {
 					return score [0];
 				}), reverse: true})) [0];
 				var _ = __left0__ [0];
 				var _ = __left0__ [1];
 				var lastState = __left0__ [2];
-				newTopScores.append (tuple ([evaluationFunction (game, lastState [0], player), action, lastState]));
-			}
-			return newTopScores;
-		};
-		var beamScoresSmart = function (game, state, depth, beamWidth) {
-			var __left0__ = state;
-			var board = __left0__ [0];
-			var player = __left0__ [1];
-			if (game.isEnd (state) || depth == 0) {
-				return list ([tuple ([smartEvaluationFunction (game, board, player), null, state])]);
-			}
-			var actions = shuffle (game.actions (state));
-			var numTopScores = beamWidth [depth - 1];
-			if (numTopScores == null) {
-				var numTopScores = len (actions);
-			}
-			var topScores = function () {
-				var __accu0__ = [];
-				for (var i = 0; i < numTopScores; i++) {
-					__accu0__.append (tuple ([-(float ('inf')), null, null]));
-				}
-				return __accu0__;
-			} ();
-			var newStates = list ([]);
-			var __iterable0__ = actions;
-			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-				var action = __iterable0__ [__index0__];
-				var __left0__ = game.simulatedMove (state, action);
-				var newBoard = __left0__ [0];
-				var newPlayer = __left0__ [1];
-				var newScore = smartEvaluationFunction (game, newBoard, player);
-				var minScore = sorted (topScores, __kwargtrans__ ({key: (function __lambda__ (score) {
-					return score [0];
-				})})) [0];
-				if (newScore > minScore [0]) {
-					topScores.remove (minScore);
-					topScores.append (tuple ([newScore, action, tuple ([newBoard, newPlayer])]));
-				}
-			}
-			var newTopScores = list ([]);
-			var __iterable0__ = topScores;
-			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-				var __left0__ = __iterable0__ [__index0__];
-				var score = __left0__ [0];
-				var action = __left0__ [1];
-				var newState = __left0__ [2];
-				var __left0__ = sorted (beamScores (game, newState, depth - 1, beamWidth), __kwargtrans__ ({key: (function __lambda__ (score) {
-					return score [0];
-				}), reverse: true})) [0];
-				var _ = __left0__ [0];
-				var _ = __left0__ [1];
-				var lastState = __left0__ [2];
-				newTopScores.append (tuple ([smartEvaluationFunction (game, lastState [0], player), action, lastState]));
+				newTopScores.append (tuple ([evalFunction (game, lastState [0], player), action, lastState]));
 			}
 			return newTopScores;
 		};
@@ -560,7 +508,7 @@
 				var depth = 3;
 				var beamWidth = list ([1, 5, 15]);
 			}
-			var scores = beamScores (game, state, depth, beamWidth);
+			var scores = beamScores (game, state, depth, beamWidth, evaluationFunction);
 			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
 				return score [0];
 			}), reverse: true})) [0];
@@ -581,23 +529,10 @@
 				var depth = 3;
 				var beamWidth = list ([1, 5, 15]);
 			}
-			var scores = beamScoresSmart (game, state, depth, beamWidth);
-			var bestScore = -(float ('inf'));
-			var bestIndices = list ([]);
-			for (var i = 0; i < len (scores); i++) {
-				var __left0__ = scores [i];
-				var score = __left0__ [0];
-				var move = __left0__ [1];
-				var _ = __left0__ [2];
-				if (score > bestScore) {
-					var bestScore = score;
-					var bestIndices = list ([i]);
-				}
-				else if (score == bestScore) {
-					bestIndices.append (i);
-				}
-			}
-			var __left0__ = scores [random.choice (bestIndices)];
+			var scores = beamScores (game, state, depth, beamWidth, smartEvaluationFunction);
+			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
+				return score [0];
+			}), reverse: true})) [0];
 			var _ = __left0__ [0];
 			var bestMove = __left0__ [1];
 			var _ = __left0__ [2];
@@ -718,18 +653,6 @@
 			}
 			return sum (results);
 		};
-		var smartFeatureExtractor = function (game, board, player) {
-			var features = dict (int);
-			features ['myLongestPath'] = game.longestPath (board, player) / 12.0;
-			features ['yourLongestPath'] = game.longestPath (board, game.otherPlayer (player)) / 12.0;
-			var cols = game.countNumCols (board, player);
-			features.py_update (cols);
-			var pieces = game.countAllPieces (board, player);
-			features.py_update (pieces);
-			var flipPotentials = game.getAllFlipPotentials (board, player);
-			features.py_update (flipPotentials);
-			return features;
-		};
 		var initSmartFeatureWeights = function () {
 			var weights = dict (float);
 			weights ['myLongestPath'] = 20;
@@ -775,18 +698,17 @@
 			return weights;
 		};
 		var smartEvaluationFunction = function (game, board, player) {
-			var features = smartFeatureExtractor (game, board, player);
+			var features = game.smartFeatures (board, player);
 			var weights = initSmartFeatureWeights ();
-			var py_values = function () {
+			var value = sum (function () {
 				var __accu0__ = [];
 				var __iterable0__ = features.py_keys ();
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var k = __iterable0__ [__index0__];
 					__accu0__.append (features [k] * weights [k]);
 				}
-				return set (__accu0__);
-			} ();
-			var value = sum (py_values);
+				return __accu0__;
+			} ());
 			if (game.isEnd (tuple ([board, player]))) {
 				return game.utility (tuple ([board, player])) + value;
 			}
@@ -1115,211 +1037,6 @@
 				}
 				return tuple ([myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces - yourNumPieces]);
 			});},
-			get countAllPieces () {return __get__ (this, function (self, board, player) {
-				var pieces = dict (float);
-				pieces ['myTotal'] = 0;
-				pieces ['yourTotal'] = 0;
-				pieces ['myPerm'] = 0;
-				pieces ['yourPerm'] = 0;
-				var __iterable0__ = function () {
-					var __accu0__ = [];
-					for (var j = 0; j < 12; j++) {
-						for (var i = 0; i < 8; i++) {
-							__accu0__.append (tuple ([i, j]));
-						}
-					}
-					return __accu0__;
-				} ();
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var i = __left0__ [0];
-					var j = __left0__ [1];
-					if (board [i] [j] == player.upper ()) {
-						pieces ['myPerm']++;
-						pieces ['myTotal']++;
-					}
-					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
-						pieces ['yourPerm']++;
-						pieces ['yourTotal']++;
-					}
-					else if (board [i] [j] == player) {
-						pieces ['myTotal']++;
-						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
-						if (numEmptyNeighbors == 0) {
-							pieces ['myPerm']++;
-						}
-						else if (numEmptyNeighbors == 1) {
-							if (__in__ ('my1Empty', pieces)) {
-								pieces ['my1Empty']++;
-							}
-							else {
-								pieces ['my1Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 2) {
-							if (__in__ ('my2Empty', pieces)) {
-								pieces ['my2Empty']++;
-							}
-							else {
-								pieces ['my2Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 3) {
-							if (__in__ ('my3Empty', pieces)) {
-								pieces ['my3Empty']++;
-							}
-							else {
-								pieces ['my3Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 4) {
-							if (__in__ ('my4Empty', pieces)) {
-								pieces ['my4Empty']++;
-							}
-							else {
-								pieces ['my4Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 5) {
-							if (__in__ ('my5Empty', pieces)) {
-								pieces ['my5Empty']++;
-							}
-							else {
-								pieces ['my5Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 6) {
-							if (__in__ ('my5Empty', pieces)) {
-								pieces ['my5Empty']++;
-							}
-							else {
-								pieces ['my5Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 7) {
-							if (__in__ ('my7Empty', pieces)) {
-								pieces ['my7Empty']++;
-							}
-							else {
-								pieces ['my7Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 8) {
-							if (__in__ ('my8Empty', pieces)) {
-								pieces ['my8Empty']++;
-							}
-							else {
-								pieces ['my8Empty'] = 1;
-							}
-						}
-					}
-					else if (board [i] [j] == self.otherPlayer (player)) {
-						pieces ['yourTotal']++;
-						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
-						if (numEmptyNeighbors == 0) {
-							pieces ['yourPerm']++;
-						}
-						else if (numEmptyNeighbors == 1) {
-							if (__in__ ('your1Empty', pieces)) {
-								pieces ['your1Empty']++;
-							}
-							else {
-								pieces ['your1Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 2) {
-							if (__in__ ('your2Empty', pieces)) {
-								pieces ['your2Empty']++;
-							}
-							else {
-								pieces ['your2Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 3) {
-							if (__in__ ('your3Empty', pieces)) {
-								pieces ['your3Empty']++;
-							}
-							else {
-								pieces ['your3Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 4) {
-							if (__in__ ('your4Empty', pieces)) {
-								pieces ['your4Empty']++;
-							}
-							else {
-								pieces ['your4Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 5) {
-							if (__in__ ('your5Empty', pieces)) {
-								pieces ['your5Empty']++;
-							}
-							else {
-								pieces ['your5Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 6) {
-							if (__in__ ('your6Empty', pieces)) {
-								pieces ['your6Empty']++;
-							}
-							else {
-								pieces ['your6Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 7) {
-							if (__in__ ('your7Empty', pieces)) {
-								pieces ['your7Empty']++;
-							}
-							else {
-								pieces ['your7Empty'] = 1;
-							}
-						}
-						else if (numEmptyNeighbors == 8) {
-							if (__in__ ('your8Empty', pieces)) {
-								pieces ['your8Empty']++;
-							}
-							else {
-								pieces ['your8Empty'] = 1;
-							}
-						}
-					}
-				}
-				var __iterable0__ = pieces.py_items ();
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var key = __left0__ [0];
-					var value = __left0__ [1];
-					pieces [key] = value / 96.0;
-				}
-				return pieces;
-			});},
-			get countNumCols () {return __get__ (this, function (self, board, player) {
-				var pieces = dict (float);
-				pieces ['myCols'] = 0;
-				pieces ['yourCols'] = 0;
-				var otherPlayer = self.otherPlayer (player);
-				for (var j = 0; j < 12; j++) {
-					var foundMine = false;
-					var foundYours = false;
-					for (var i = 0; i < 8; i++) {
-						if (!(foundMine) && board [i] [j].lower () == player) {
-							pieces ['myCols']++;
-							var foundMine = true;
-						}
-						else if (!(foundYours) && board [i] [j].lower () == otherPlayer) {
-							pieces ['yourCols']++;
-							var foundYours = true;
-						}
-						if (foundMine && foundYours) {
-							break;
-						}
-					}
-				}
-				pieces ['myCols'] = pieces ['myCols'] / 12.0;
-				pieces ['yourCols'] = pieces ['yourCols'] / 12.0;
-				return pieces;
-			});},
 			get getNumEmptyNeighbors () {return __get__ (this, function (self, row, col, board) {
 				var neighbors = self.surroundingPlaces (row, col);
 				var numEmptyNeighbors = 0;
@@ -1354,14 +1071,31 @@
 				}
 				return flipPotential;
 			});},
-			get getAllFlipPotentials () {return __get__ (this, function (self, board, player) {
-				var pieces = dict (float);
-				pieces ['my1Flip'] = 0;
-				pieces ['my2Flip'] = 0;
-				pieces ['my3Flip'] = 0;
-				pieces ['your1Flip'] = 0;
-				pieces ['your2Flip'] = 0;
-				pieces ['your3Flip'] = 0;
+			get smartFeatures () {return __get__ (this, function (self, board, player) {
+				var featureNames = list (['myLongestPath', 'yourLongestPath', 'myCols', 'yourCols', 'myPerm', 'yourPerm', 'myTotal', 'yourTotal', 'my1Empty', 'your1Empty', 'my2Empty', 'your2Empty', 'my3Empty', 'your3Empty', 'my4Empty', 'your4Empty', 'my5Empty', 'your5Empty', 'my6Empty', 'your6Empty', 'my7Empty', 'your7Empty', 'my8Empty', 'your8Empty', 'my1Flip', 'your1Flip', 'my2Flip', 'your2Flip', 'my3Flip', 'your3Flip', 'my4Flip', 'your4Flip', 'my5Flip', 'your5Flip', 'my6Flip', 'your6Flip', 'my7Flip', 'your7Flip', 'my8Flip', 'your8Flip']);
+				var features = function () {
+					var __accu0__ = [];
+					var __iterable0__ = featureNames;
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var feature = __iterable0__ [__index0__];
+						__accu0__.append (list ([feature, 0]));
+					}
+					return dict (__accu0__);
+				} ();
+				var myCols = function () {
+					var __accu0__ = [];
+					for (var _ = 0; _ < 12; _++) {
+						__accu0__.append (0);
+					}
+					return __accu0__;
+				} ();
+				var yourCols = function () {
+					var __accu0__ = [];
+					for (var _ = 0; _ < 12; _++) {
+						__accu0__.append (0);
+					}
+					return __accu0__;
+				} ();
 				var __iterable0__ = function () {
 					var __accu0__ = [];
 					for (var j = 0; j < 12; j++) {
@@ -1375,120 +1109,105 @@
 					var __left0__ = __iterable0__ [__index0__];
 					var i = __left0__ [0];
 					var j = __left0__ [1];
-					if (board [i] [j] == '-') {
-						var flipPotential = self.getFlipPotential (i, j, board, player);
-						if (flipPotential > 0) {
-							if (flipPotential == 1) {
-								pieces ['my1Flip']++;
-							}
-							else if (flipPotential == 2) {
-								pieces ['my2Flip']++;
-							}
-							else if (flipPotential == 3) {
-								pieces ['my3Flip']++;
-							}
-							else if (flipPotential == 4) {
-								if (__in__ ('my4Flip', pieces)) {
-									pieces ['my4Flip']++;
-								}
-								else {
-									pieces ['my4Flip'] = 1;
-								}
-							}
-							else if (flipPotential == 5) {
-								if (__in__ ('my5Flip', pieces)) {
-									pieces ['my5Flip']++;
-								}
-								else {
-									pieces ['my5Flip'] = 1;
-								}
-							}
-							else if (flipPotential == 6) {
-								if (__in__ ('my6Flip', pieces)) {
-									pieces ['my6Flip']++;
-								}
-								else {
-									pieces ['my6Flip'] = 1;
-								}
-							}
-							else if (flipPotential == 7) {
-								if (__in__ ('my7Flip', pieces)) {
-									pieces ['my7Flip']++;
-								}
-								else {
-									pieces ['my7Flip'] = 1;
-								}
-							}
-							else if (flipPotential == 8) {
-								if (__in__ ('my8Flip', pieces)) {
-									pieces ['my8Flip']++;
-								}
-								else {
-									pieces ['my8Flip'] = 1;
-								}
-							}
+					if (board [i] [j] == player.upper ()) {
+						features ['myPerm']++;
+						features ['myTotal']++;
+						if (myCols [j] == 0) {
+							myCols [j] = 1;
 						}
-						else if (flipPotential < 0) {
-							if (flipPotential == -(1)) {
-								pieces ['your1Flip']++;
-							}
-							else if (flipPotential == -(2)) {
-								pieces ['your2Flip']++;
-							}
-							else if (flipPotential == -(3)) {
-								pieces ['your3Flip']++;
-							}
-							else if (flipPotential == -(4)) {
-								if (__in__ ('your4Flip', pieces)) {
-									pieces ['your4Flip']++;
-								}
-								else {
-									pieces ['your4Flip'] = 1;
-								}
-							}
-							else if (flipPotential == -(5)) {
-								if (__in__ ('your5Flip', pieces)) {
-									pieces ['your5Flip']++;
-								}
-								else {
-									pieces ['your5Flip'] = 1;
-								}
-							}
-							else if (flipPotential == -(6)) {
-								if (__in__ ('your6Flip', pieces)) {
-									pieces ['your6Flip']++;
-								}
-								else {
-									pieces ['your6Flip'] = 1;
-								}
-							}
-							else if (flipPotential == -(7)) {
-								if (__in__ ('your7Flip', pieces)) {
-									pieces ['your7Flip']++;
-								}
-								else {
-									pieces ['your7Flip'] = 1;
-								}
-							}
-							else if (flipPotential == -(8)) {
-								if (__in__ ('your8Flip', pieces)) {
-									pieces ['your8Flip']++;
-								}
-								else {
-									pieces ['your8Flip'] = 1;
-								}
-							}
+					}
+					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
+						features ['yourPerm']++;
+						features ['yourTotal']++;
+						if (yourCols [j] == 0) {
+							yourCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == player) {
+						features ['myTotal']++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							features ['myPerm']++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							features ['my1Empty']++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							features ['my2Empty']++;
+						}
+						else if (numEmptyNeighbors == 3) {
+							features ['my3Empty']++;
+						}
+						else if (numEmptyNeighbors == 4) {
+							features ['my4Empty']++;
+						}
+						else if (numEmptyNeighbors == 5) {
+							features ['my5Empty']++;
+						}
+						else if (numEmptyNeighbors == 6) {
+							features ['my5Empty']++;
+						}
+						else if (numEmptyNeighbors == 7) {
+							features ['my7Empty']++;
+						}
+						else if (numEmptyNeighbors == 8) {
+							features ['my8Empty']++;
+						}
+						if (myCols [j] == 0) {
+							myCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == self.otherPlayer (player)) {
+						features ['yourTotal']++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							features ['yourPerm']++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							features ['your1Empty']++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							features ['your2Empty']++;
+						}
+						else if (numEmptyNeighbors == 3) {
+							features ['your3Empty']++;
+						}
+						else if (numEmptyNeighbors == 4) {
+							features ['your4Empty']++;
+						}
+						else if (numEmptyNeighbors == 5) {
+							features ['your5Empty']++;
+						}
+						else if (numEmptyNeighbors == 6) {
+							features ['your6Empty']++;
+						}
+						else if (numEmptyNeighbors == 7) {
+							features ['your7Empty']++;
+						}
+						else if (numEmptyNeighbors == 8) {
+							features ['your8Empty']++;
+						}
+						if (yourCols [j] == 0) {
+							yourCols [j] = 1;
 						}
 					}
 				}
-				var __iterable0__ = pieces;
-				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-					var __left0__ = __iterable0__ [__index0__];
-					var key = __left0__ [0];
-					var value = __left0__ [1];
-					pieces [key] = value / 96.0;
-				}
-				return pieces;
+				var features = function () {
+					var __accu0__ = [];
+					var __iterable0__ = features.py_items ();
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var __left0__ = __iterable0__ [__index0__];
+						var k = __left0__ [0];
+						var v = __left0__ [1];
+						__accu0__.append (list ([k, v / 96.0]));
+					}
+					return dict (__accu0__);
+				} ();
+				features ['myCols'] = sum (myCols) / 12.0;
+				features ['yourCols'] = sum (yourCols) / 12.0;
+				features ['myLongestPath'] = game.longestPath (board, player) / 12.0;
+				features ['yourLongestPath'] = game.longestPath (board, game.otherPlayer (player)) / 12.0;
+				return features;
 			});}
 		});
 		var GameManager = __class__ ('GameManager', [object], {
@@ -1680,7 +1399,6 @@
 			__all__.beamMinimax = beamMinimax;
 			__all__.beamMinimaxMoreFeatures = beamMinimaxMoreFeatures;
 			__all__.beamScores = beamScores;
-			__all__.beamScoresSmart = beamScoresSmart;
 			__all__.depthCharge = depthCharge;
 			__all__.evaluationFunction = evaluationFunction;
 			__all__.expand = expand;
@@ -1698,7 +1416,6 @@
 			__all__.selectfn = selectfn;
 			__all__.shuffle = shuffle;
 			__all__.smartEvaluationFunction = smartEvaluationFunction;
-			__all__.smartFeatureExtractor = smartFeatureExtractor;
 			__all__.smartFeaturesMove = smartFeaturesMove;
 			__all__.value = value;
 			__all__.valueExpectimax = valueExpectimax;
