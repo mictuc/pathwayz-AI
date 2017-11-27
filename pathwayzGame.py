@@ -82,8 +82,11 @@ def MCTSdepthCharge (game,node,originalPlayer):
 
 def monteCarloTreeSearch(game,state):
     rootNode = Node(state,[],0.0,0.0,None,None)
-    count = 1000000
+    count = 2000000
     node = rootNode
+    for action in game.actions(state):
+        if game.isWinner(game.simulatedMove(state,action),state[1]):
+            return action
     for i in range(count):
         node = select(node)
         node = expand(game,node)

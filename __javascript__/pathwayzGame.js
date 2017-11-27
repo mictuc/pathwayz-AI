@@ -2729,8 +2729,13 @@ function pathwayzGame () {
 		};
 		var monteCarloTreeSearch = function (game, state) {
 			var rootNode = Node (state, list ([]), 0, 0, null, null);
-			var count = 25000;
+			var count = 200000;
 			var node = rootNode;
+			for (var action in game.actions(state)){
+				if (game.isWinner(game.simulatedMove(state,action),state[1])){
+					return action;
+				}
+			}
 			for (var i = 0; i < count; i++) {
 				var node = select (node);
 				var node = expand (game, node);
