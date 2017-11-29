@@ -31,7 +31,6 @@ def expand (game, node):
     # Collect legal moves and successor states
     state = node.state
     board, player = state
-
     sortedChildren = []
     for move in game.actions(state):
         newState = game.simulatedMove(state, move)
@@ -53,36 +52,48 @@ def backpropagate (node,score):
     if node.parent:
         backpropagate(node.parent,score)
 
-def MCTSdepthCharge (game,node,originalPlayer,depth):
+def MCTSdepthCharge (game,node,originalPlayer):
     state = node.state
-    if game.isEnd(state) or depth == 0:
-        if originalPlayer:
-            backpropagate(node,evaluationFunction(game,state[0],state[1]))
-            return
-        else:
-            backpropagate(node,-evaluationFunction(game,state[0],game.otherPlayer(state[1])))
-            return
+    if game.isEnd(state):
+        if game.isWinner(state,state[1]):
+            if originalPlayer:
+                backpropagate(node,1)
+                return
+            else:
+                backpropagate(node,0)
+                return
+        else if (game.isWinner(state,game.otherPlayer(state[1]))):
+            if originalPlayer:
+                backpropagate(node,0)
+                return
+            else:
+                backpropagate(node,1)
+                return
     moves = game.actions(state)
     rand = random.choice(moves)
     newState = game.simulatedMove(state, rand)
     for child in node.children:
         if child.state == newState:
-            MCTSdepthCharge(game, child, not originalPlayer, depth-1)
+            MCTSdepthCharge(game, child, not originalPlayer)
             return
-    newNode = Node(newState,[],0,0,node,rand)
+    newNode = Node(newState,[],0.0,0.0,node,rand)
     node.children.append(newNode)
-    MCTSdepthCharge(game, newNode, not originalPlayer, depth-1)
+    MCTSdepthCharge(game, newNode, not originalPlayer)
 
 def monteCarloTreeSearch(game,state):
-    rootNode = Node(state,[],0,0,None,None)
-    count = 25000
+    rootNode = Node(state,[],0.0,0.0,None,None)
+    count = 2000000
     node = rootNode
+    for action in game.actions(state):
+        if game.isWinner(game.simulatedMove(state,action),state[1]):
+            return action
     for i in range(count):
         node = select(node)
         node = expand(game,node)
         for child in node.children:
-            MCTSdepthCharge(game, child, False, 50)
-    return sorted(rootNode.children, key=lambda c: c.utility, reverse=True)[0].action
+            MCTSdepthCharge(game, child, False)
+    move = sorted(rootNode.children, key=lambda c: c.utility/c.visits, reverse=True)[0].action
+    return move
 
 def monteCarloSearch(game, state):
     board, player = state
