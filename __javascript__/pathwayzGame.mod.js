@@ -68,16 +68,28 @@
 				backpropagate (node.parent, score);
 			}
 		};
-		var MCTSdepthCharge = function (game, node, originalPlayer, depth) {
+		var MCTSdepthCharge = function (game, node, originalPlayer) {
 			var state = node.state;
-			if (game.isEnd (state) || depth == 0) {
-				if (originalPlayer) {
-					backpropagate (node, evaluationFunction (game, state [0], state [1]));
-					return ;
+			if (game.isEnd (state)) {
+				if (game.isWinner (state, state [1])) {
+					if (originalPlayer) {
+						backpropagate (node, 1);
+						return ;
+					}
+					else {
+						backpropagate (node, 0);
+						return ;
+					}
 				}
-				else {
-					backpropagate (node, -(evaluationFunction (game, state [0], game.otherPlayer (state [1]))));
-					return ;
+				else if (game.isWinner (state, game.otherPlayer (state [1]))) {
+					if (originalPlayer) {
+						backpropagate (node, 0);
+						return ;
+					}
+					else {
+						backpropagate (node, 1);
+						return ;
+					}
 				}
 			}
 			var moves = game.actions (state);
@@ -87,30 +99,38 @@
 			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 				var child = __iterable0__ [__index0__];
 				if (child.state == newState) {
-					MCTSdepthCharge (game, child, !(originalPlayer), depth - 1);
+					MCTSdepthCharge (game, child, !(originalPlayer));
 					return ;
 				}
 			}
-			var newNode = Node (newState, list ([]), 0, 0, node, rand);
+			var newNode = Node (newState, list ([]), 0.0, 0.0, node, rand);
 			node.children.append (newNode);
-			MCTSdepthCharge (game, newNode, !(originalPlayer), depth - 1);
+			MCTSdepthCharge (game, newNode, !(originalPlayer));
 		};
 		var monteCarloTreeSearch = function (game, state) {
-			var rootNode = Node (state, list ([]), 0, 0, null, null);
-			var count = 25000;
+			var rootNode = Node (state, list ([]), 0.0, 0.0, null, null);
+			var count = 200000;
 			var node = rootNode;
+			var __iterable0__ = game.actions (state);
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var action = __iterable0__ [__index0__];
+				if (game.isWinner (game.simulatedMove (state, action), state [1])) {
+					return action;
+				}
+			}
 			for (var i = 0; i < count; i++) {
 				var node = select (node);
 				var node = expand (game, node);
 				var __iterable0__ = node.children;
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var child = __iterable0__ [__index0__];
-					MCTSdepthCharge (game, child, false, 50);
+					MCTSdepthCharge (game, child, false);
 				}
 			}
-			return sorted (rootNode.children, __kwargtrans__ ({key: (function __lambda__ (c) {
-				return c.utility;
+			var move = sorted (rootNode.children, __kwargtrans__ ({key: (function __lambda__ (c) {
+				return c.utility / c.visits;
 			}), reverse: true})) [0].action;
+			return move;
 		};
 		var monteCarloSearch = function (game, state) {
 			var __left0__ = state;

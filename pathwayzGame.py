@@ -46,13 +46,13 @@ def expand (game, node):
 def selectfn(node):
     return node.utility/node.visits+math.sqrt(2*math.log(node.parent.visits)/node.visits)
 
-def backpropagate (node,score):
+def backpropagate(node,score):
     node.visits += 1
     node.utility = node.utility+score
     if node.parent:
         backpropagate(node.parent,score)
 
-def MCTSdepthCharge (game,node,originalPlayer):
+def MCTSdepthCharge(game,node,originalPlayer):
     state = node.state
     if game.isEnd(state):
         if game.isWinner(state,state[1]):
@@ -62,7 +62,7 @@ def MCTSdepthCharge (game,node,originalPlayer):
             else:
                 backpropagate(node,0)
                 return
-        else if (game.isWinner(state,game.otherPlayer(state[1]))):
+        elif (game.isWinner(state,game.otherPlayer(state[1]))):
             if originalPlayer:
                 backpropagate(node,0)
                 return
@@ -82,7 +82,7 @@ def MCTSdepthCharge (game,node,originalPlayer):
 
 def monteCarloTreeSearch(game,state):
     rootNode = Node(state,[],0.0,0.0,None,None)
-    count = 2000000
+    count = 200000
     node = rootNode
     for action in game.actions(state):
         if game.isWinner(game.simulatedMove(state,action),state[1]):
