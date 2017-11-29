@@ -199,6 +199,26 @@ def smartFeaturesMove(game, state):
         return randomMove(game, state)
     return random.choice(options)
 
+def TDLfeaturesMove(game, state):
+    _, player = state
+    bestScore = -float("inf")
+    options = []
+    actions = game.actions(state)
+    for action in actions:
+        newState = game.simulatedMove(state, action)
+        newBoard, _ = newState
+        newScore = TDLevaluationFunction(game, newBoard, player)
+        #print(newScore)
+        if newScore > bestScore:
+            bestScore = newScore
+            options = [action]
+        elif newScore == bestScore:
+            options.append(action)
+    if len(options) == 0:
+        print("hello...")
+        return randomMove(game, state)
+    return random.choice(options)
+
 def value(game, state, depth, alpha, beta, originalPlayer):
     board, player = state
     if game.isEnd(state) or depth == 0:
@@ -328,6 +348,19 @@ def beamMinimaxMoreFeatures(game, state):
     _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
     return bestMove
 
+def beamMinimaxTDL(game, state):
+    board, player = state
+    if oneMoveAway(game, board, game.otherPlayer(player)):
+        depth = 2
+        beamWidth = [None, None]
+    # ELSEIF NO WAY TO EXTEND LONGEST PATH...
+    else:
+        depth = 3
+        beamWidth = [1, 5, 15]
+    scores = beamScores(game, state, depth, beamWidth, TDLevaluationFunction)
+    _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
+    return bestMove
+
 def AVG(scores):
     scores = sorted(scores)
     weightedTotal = 0
@@ -433,9 +466,22 @@ def initSmartFeatureWeights():
     weights['your8Flip'] = -0.01
     return weights
 
+def initOpponentWeights():
+    #weights = dict(float)
+    weights = {"your2Flip": 0.7822916666666648, "myPerm": 6.375000000000007, "diffPerm": 5.657291666666555, "my2Flip": -0.43645833333333245, "your1Flip": 0.5760416666666688, "your2Empty": -0.8906250000000077, "my8Empty": -0.047916666666666705, "your4Flip": -0.09791666666666667, "my3Flip": 0.0500000000000001, "your8Flip": -0.1, "your5Empty": 0.220833333333333, "your8Empty": 0.09479166666666669, "yourCols": -4.266666666666366, "your3Empty": -0.13125, "diffLongestPath": 91.69166666666835, "yourPerm": -4.282291666666636, "my8Flip": 0.1, "my5Empty": -0.005208333333333049, "myTotal": 6.836458333333379, "diffTotal": 9.201041666666528, "my4Empty": 0.8666666666666678, "yourLongestPath": -34.5416666666668, "my4Flip": 0.09895833333333334, "your6Flip": -0.1, "your1Empty": -0.03229166666666664, "your7Empty": 0.06979166666666668, "my3Empty": 0.596875000000004, "my1Flip": -1.504166666666667, "my6Flip": 0.1, "myLongestPath": 57.150000000000546, "myCols": 26.93333333333583, "your6Empty": 0.055208333333333366, "your5Flip": -0.09687500000000002, "my6Empty": 0.0697916666666667, "my7Flip": 0.1, "my7Empty": -0.05000000000000005, "your4Empty": -0.06874999999999995, "your7Flip": -0.1, "my5Flip": 0.1, "yourTotal": -2.364583333333319, "your3Flip": -0.07708333333333331, "my1Empty": 0.35937499999999944, "my2Empty": 1.27187500000002}
+    return weights
+
 def smartEvaluationFunction(game, board, player):
     features = game.smartFeatures(board, player)
     weights = initSmartFeatureWeights()
+    value = sum([features[k] * weights[k] for k in features.keys()])
+    if game.isEnd((board, player)):
+        return game.utility((board, player)) + value
+    return value
+
+def TDLevaluationFunction(game, board, player):
+    features = game.TDLfeatures(board, player)
+    weights = initOpponentWeights()
     value = sum([features[k] * weights[k] for k in features.keys()])
     if game.isEnd((board, player)):
         return game.utility((board, player)) + value
@@ -695,42 +741,6 @@ class PathwayzGame:
                     features['your8Empty'] += 1
                 if yourCols[j] == 0:
                     yourCols[j] = 1
-            # elif board[i][j] == '-':
-            #     flipPotential = self.getFlipPotential(i, j, board, player)
-            #     if flipPotential > 0:
-            #         if flipPotential == 1:
-            #             features['my1Flip'] += 1
-            #         elif flipPotential == 2:
-            #             features['my2Flip'] += 1
-            #         elif flipPotential == 3:
-            #             features['my3Flip'] += 1
-            #         elif flipPotential == 4:
-            #             features['my4Flip'] += 1
-            #         elif flipPotential == 5:
-            #             features['my5Flip'] += 1
-            #         elif flipPotential == 6:
-            #             features['my6Flip'] += 1
-            #         elif flipPotential == 7:
-            #             features['my7Flip'] += 1
-            #         elif flipPotential == 8:
-            #             features['my8Flip'] += 1
-            #     elif flipPotential < 0:
-            #         if flipPotential == -1:
-            #             features['your1Flip'] += 1
-            #         elif flipPotential == -2:
-            #             features['your2Flip'] += 1
-            #         elif flipPotential == -3:
-            #             features['your3Flip'] += 1
-            #         elif flipPotential == -4:
-            #             features['your4Flip'] += 1
-            #         elif flipPotential == -5:
-            #             features['your5Flip'] += 1
-            #         elif flipPotential == -6:
-            #             features['your6Flip'] += 1
-            #         elif flipPotential == -7:
-            #             features['your7Flip'] += 1
-            #         elif flipPotential == -8:
-            #             features['your8Flip'] += 1
         features = {k:v/96.0 for k, v in features.items()}
         features['myCols'] = sum(myCols)/12.0
         features['yourCols'] = sum(yourCols)/12.0
@@ -738,12 +748,124 @@ class PathwayzGame:
         features['yourLongestPath'] = game.longestPath(board, game.otherPlayer(player)) / 12.0
         return features
 
+    def TDLfeatures(self, board, player):
+        featureNames = ['myLongestPath','yourLongestPath','diffLongestPath', 'myCols','yourCols','myPerm','yourPerm','diffPerm', 'myTotal','yourTotal','diffTotal', 'my1Empty','your1Empty','my2Empty','your2Empty','my3Empty','your3Empty','my4Empty','your4Empty','my5Empty','your5Empty','my6Empty','your6Empty','my7Empty','your7Empty','my8Empty','your8Empty','my1Flip','your1Flip','my2Flip','your2Flip','my3Flip','your3Flip','my4Flip','your4Flip','my5Flip','your5Flip','my6Flip','your6Flip','my7Flip','your7Flip','my8Flip','your8Flip']
+        features = {feature:0 for feature in featureNames}
+        myCols = [0 for _ in range(12)]
+        yourCols = [0 for _ in range(12)]
+        for i,j in [(i, j) for j in range(12) for i in range(8)]:
+            if board[i][j] == player.upper():
+                features['myPerm'] += 1
+                features['myTotal'] += 1
+                if myCols[j] == 0:
+                    myCols[j] = 1
+            elif board[i][j] == self.otherPlayer(player).upper():
+                features['yourPerm'] += 1
+                features['yourTotal'] += 1
+                if yourCols[j] == 0:
+                    yourCols[j] = 1
+            elif board[i][j] == player:
+                features['myTotal'] += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    features['myPerm'] += 1
+                elif numEmptyNeighbors == 1:
+                    features['my1Empty'] += 1
+                elif numEmptyNeighbors == 2:
+                    features['my2Empty'] += 1
+                elif numEmptyNeighbors == 3:
+                    features['my3Empty'] += 1
+                elif numEmptyNeighbors == 4:
+                    features['my4Empty'] += 1
+                elif numEmptyNeighbors == 5:
+                    features['my5Empty'] += 1
+                elif numEmptyNeighbors == 6:
+                    features['my6Empty'] += 1
+                elif numEmptyNeighbors == 7:
+                    features['my7Empty'] += 1
+                elif numEmptyNeighbors == 8:
+                    features['my8Empty'] += 1
+                if myCols[j] == 0:
+                    myCols[j] = 1
+            elif board[i][j] == self.otherPlayer(player):
+                features['yourTotal'] += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    features['yourPerm'] += 1
+                elif numEmptyNeighbors == 1:
+                    features['your1Empty'] += 1
+                elif numEmptyNeighbors == 2:
+                    features['your2Empty'] += 1
+                elif numEmptyNeighbors == 3:
+                    features['your3Empty'] += 1
+                elif numEmptyNeighbors == 4:
+                    features['your4Empty'] += 1
+                elif numEmptyNeighbors == 5:
+                    features['your5Empty'] += 1
+                elif numEmptyNeighbors == 6:
+                    features['your6Empty'] += 1
+                elif numEmptyNeighbors == 7:
+                    features['your7Empty'] += 1
+                elif numEmptyNeighbors == 8:
+                    features['your8Empty'] += 1
+                if yourCols[j] == 0:
+                    yourCols[j] = 1
+            elif board[i][j] == '-':
+                flipPotential = self.getFlipPotential(i, j, board, player)
+                if flipPotential > 0:
+                    if flipPotential == 1:
+                        features['my1Flip'] += 1
+                    elif flipPotential == 2:
+                        features['my2Flip'] += 1
+                    elif flipPotential == 3:
+                        features['my3Flip'] += 1
+                    elif flipPotential == 4:
+                        features['my4Flip'] += 1
+                    elif flipPotential == 5:
+                        features['my5Flip'] += 1
+                    elif flipPotential == 6:
+                        features['my6Flip'] += 1
+                    elif flipPotential == 7:
+                        features['my7Flip'] += 1
+                    elif flipPotential == 8:
+                        features['my8Flip'] += 1
+                elif flipPotential < 0:
+                    if flipPotential == -1:
+                        features['your1Flip'] += 1
+                    elif flipPotential == -2:
+                        features['your2Flip'] += 1
+                    elif flipPotential == -3:
+                        features['your3Flip'] += 1
+                    elif flipPotential == -4:
+                        features['your4Flip'] += 1
+                    elif flipPotential == -5:
+                        features['your5Flip'] += 1
+                    elif flipPotential == -6:
+                        features['your6Flip'] += 1
+                    elif flipPotential == -7:
+                        features['your7Flip'] += 1
+                    elif flipPotential == -8:
+                        features['your8Flip'] += 1
+        features['diffPerm'] = features['myPerm'] - features['yourPerm']
+        features['diffTotal'] = features['myTotal'] - features['yourTotal']
+        features = {k:v/96.0 for k, v in features.items()}
+        features['myCols'] = sum(myCols)/12.0
+        features['yourCols'] = sum(yourCols)/12.0
+        myLongestPath = game.longestPath(board, player)
+        yourLongestPath = game.longestPath(board, game.otherPlayer(player))
+        features['myLongestPath'] = myLongestPath / 12.0
+        features['yourLongestPath'] = yourLongestPath / 12.0
+        features['diffLongestPath'] = (myLongestPath - yourLongestPath) / 12.0
+        # ADD FEATURE FOR NUM PLACES TO FLIP PATH (+1?) / LONGESTPATH + 1
+        # ADD FEATURE FOR LONGEST PATH AFTER FLIP
+        return features
+
 class GameManager():
     def __init__(self):
         # Initializes GameManager object
         self.game = PathwayzGame()
         self.state = game.startState()
-        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Features':featuresMove, 'PAI Advanced Features':smartFeaturesMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Advanced Beam Minimax':beamMinimaxMoreFeatures, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch, 'PAI MCTS':monteCarloTreeSearch}
+        self.policies = {'Human':None, 'PAI Random':randomMove, 'PAI Baseline':baselineMove, 'PAI Advanced Baseline':advancedBaselineMove, 'PAI Features':featuresMove, 'PAI Advanced Features':smartFeaturesMove, 'PAI TDL':TDLfeaturesMove, 'PAI Minimax':advancedMinimax, 'PAI Beam Minimax':beamMinimax, 'PAI Advanced Beam Minimax':beamMinimaxMoreFeatures, 'PAI TDL Beam Minimax':beamMinimaxTDL, 'PAI Expectimax':advancedExpectimax, 'PAI MCS':monteCarloSearch, 'PAI MCTS':monteCarloTreeSearch}
         self.displayBoard()
         self.isAI = {'w':False, 'b':False}
 

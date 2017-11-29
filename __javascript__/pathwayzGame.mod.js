@@ -283,6 +283,35 @@
 			}
 			return random.choice (options);
 		};
+		var TDLfeaturesMove = function (game, state) {
+			var __left0__ = state;
+			var _ = __left0__ [0];
+			var player = __left0__ [1];
+			var bestScore = -(float ('inf'));
+			var options = list ([]);
+			var actions = game.actions (state);
+			var __iterable0__ = actions;
+			for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+				var action = __iterable0__ [__index0__];
+				var newState = game.simulatedMove (state, action);
+				var __left0__ = newState;
+				var newBoard = __left0__ [0];
+				var _ = __left0__ [1];
+				var newScore = TDLevaluationFunction (game, newBoard, player);
+				if (newScore > bestScore) {
+					var bestScore = newScore;
+					var options = list ([action]);
+				}
+				else if (newScore == bestScore) {
+					options.append (action);
+				}
+			}
+			if (len (options) == 0) {
+				print ('hello...');
+				return randomMove (game, state);
+			}
+			return random.choice (options);
+		};
 		var value = function (game, state, depth, alpha, beta, originalPlayer) {
 			var __left0__ = state;
 			var board = __left0__ [0];
@@ -538,6 +567,27 @@
 			var _ = __left0__ [2];
 			return bestMove;
 		};
+		var beamMinimaxTDL = function (game, state) {
+			var __left0__ = state;
+			var board = __left0__ [0];
+			var player = __left0__ [1];
+			if (oneMoveAway (game, board, game.otherPlayer (player))) {
+				var depth = 2;
+				var beamWidth = list ([null, null]);
+			}
+			else {
+				var depth = 3;
+				var beamWidth = list ([1, 5, 15]);
+			}
+			var scores = beamScores (game, state, depth, beamWidth, TDLevaluationFunction);
+			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
+				return score [0];
+			}), reverse: true})) [0];
+			var _ = __left0__ [0];
+			var bestMove = __left0__ [1];
+			var _ = __left0__ [2];
+			return bestMove;
+		};
 		var AVG = function (scores) {
 			var scores = sorted (scores);
 			var weightedTotal = 0;
@@ -697,9 +747,30 @@
 			weights ['your8Flip'] = -(0.01);
 			return weights;
 		};
+		var initOpponentWeights = function () {
+			var weights = dict ({'your2Flip': 0.7822916666666648, 'myPerm': 6.375000000000007, 'diffPerm': 5.657291666666555, 'my2Flip': -(0.43645833333333245), 'your1Flip': 0.5760416666666688, 'your2Empty': -(0.8906250000000077), 'my8Empty': -(0.047916666666666705), 'your4Flip': -(0.09791666666666667), 'my3Flip': 0.0500000000000001, 'your8Flip': -(0.1), 'your5Empty': 0.220833333333333, 'your8Empty': 0.09479166666666669, 'yourCols': -(4.266666666666366), 'your3Empty': -(0.13125), 'diffLongestPath': 91.69166666666835, 'yourPerm': -(4.282291666666636), 'my8Flip': 0.1, 'my5Empty': -(0.005208333333333049), 'myTotal': 6.836458333333379, 'diffTotal': 9.201041666666528, 'my4Empty': 0.8666666666666678, 'yourLongestPath': -(34.5416666666668), 'my4Flip': 0.09895833333333334, 'your6Flip': -(0.1), 'your1Empty': -(0.03229166666666664), 'your7Empty': 0.06979166666666668, 'my3Empty': 0.596875000000004, 'my1Flip': -(1.504166666666667), 'my6Flip': 0.1, 'myLongestPath': 57.150000000000546, 'myCols': 26.93333333333583, 'your6Empty': 0.055208333333333366, 'your5Flip': -(0.09687500000000002), 'my6Empty': 0.0697916666666667, 'my7Flip': 0.1, 'my7Empty': -(0.05000000000000005), 'your4Empty': -(0.06874999999999995), 'your7Flip': -(0.1), 'my5Flip': 0.1, 'yourTotal': -(2.364583333333319), 'your3Flip': -(0.07708333333333331), 'my1Empty': 0.35937499999999944, 'my2Empty': 1.27187500000002});
+			return weights;
+		};
 		var smartEvaluationFunction = function (game, board, player) {
 			var features = game.smartFeatures (board, player);
 			var weights = initSmartFeatureWeights ();
+			var value = sum (function () {
+				var __accu0__ = [];
+				var __iterable0__ = features.py_keys ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var k = __iterable0__ [__index0__];
+					__accu0__.append (features [k] * weights [k]);
+				}
+				return __accu0__;
+			} ());
+			if (game.isEnd (tuple ([board, player]))) {
+				return game.utility (tuple ([board, player])) + value;
+			}
+			return value;
+		};
+		var TDLevaluationFunction = function (game, board, player) {
+			var features = game.TDLfeatures (board, player);
+			var weights = initOpponentWeights ();
 			var value = sum (function () {
 				var __accu0__ = [];
 				var __iterable0__ = features.py_keys ();
@@ -1208,13 +1279,211 @@
 				features ['myLongestPath'] = game.longestPath (board, player) / 12.0;
 				features ['yourLongestPath'] = game.longestPath (board, game.otherPlayer (player)) / 12.0;
 				return features;
+			});},
+			get TDLfeatures () {return __get__ (this, function (self, board, player) {
+				var featureNames = list (['myLongestPath', 'yourLongestPath', 'diffLongestPath', 'myCols', 'yourCols', 'myPerm', 'yourPerm', 'diffPerm', 'myTotal', 'yourTotal', 'diffTotal', 'my1Empty', 'your1Empty', 'my2Empty', 'your2Empty', 'my3Empty', 'your3Empty', 'my4Empty', 'your4Empty', 'my5Empty', 'your5Empty', 'my6Empty', 'your6Empty', 'my7Empty', 'your7Empty', 'my8Empty', 'your8Empty', 'my1Flip', 'your1Flip', 'my2Flip', 'your2Flip', 'my3Flip', 'your3Flip', 'my4Flip', 'your4Flip', 'my5Flip', 'your5Flip', 'my6Flip', 'your6Flip', 'my7Flip', 'your7Flip', 'my8Flip', 'your8Flip']);
+				var features = function () {
+					var __accu0__ = [];
+					var __iterable0__ = featureNames;
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var feature = __iterable0__ [__index0__];
+						__accu0__.append (list ([feature, 0]));
+					}
+					return dict (__accu0__);
+				} ();
+				var myCols = function () {
+					var __accu0__ = [];
+					for (var _ = 0; _ < 12; _++) {
+						__accu0__.append (0);
+					}
+					return __accu0__;
+				} ();
+				var yourCols = function () {
+					var __accu0__ = [];
+					for (var _ = 0; _ < 12; _++) {
+						__accu0__.append (0);
+					}
+					return __accu0__;
+				} ();
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == player.upper ()) {
+						features ['myPerm']++;
+						features ['myTotal']++;
+						if (myCols [j] == 0) {
+							myCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
+						features ['yourPerm']++;
+						features ['yourTotal']++;
+						if (yourCols [j] == 0) {
+							yourCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == player) {
+						features ['myTotal']++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							features ['myPerm']++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							features ['my1Empty']++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							features ['my2Empty']++;
+						}
+						else if (numEmptyNeighbors == 3) {
+							features ['my3Empty']++;
+						}
+						else if (numEmptyNeighbors == 4) {
+							features ['my4Empty']++;
+						}
+						else if (numEmptyNeighbors == 5) {
+							features ['my5Empty']++;
+						}
+						else if (numEmptyNeighbors == 6) {
+							features ['my6Empty']++;
+						}
+						else if (numEmptyNeighbors == 7) {
+							features ['my7Empty']++;
+						}
+						else if (numEmptyNeighbors == 8) {
+							features ['my8Empty']++;
+						}
+						if (myCols [j] == 0) {
+							myCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == self.otherPlayer (player)) {
+						features ['yourTotal']++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							features ['yourPerm']++;
+						}
+						else if (numEmptyNeighbors == 1) {
+							features ['your1Empty']++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							features ['your2Empty']++;
+						}
+						else if (numEmptyNeighbors == 3) {
+							features ['your3Empty']++;
+						}
+						else if (numEmptyNeighbors == 4) {
+							features ['your4Empty']++;
+						}
+						else if (numEmptyNeighbors == 5) {
+							features ['your5Empty']++;
+						}
+						else if (numEmptyNeighbors == 6) {
+							features ['your6Empty']++;
+						}
+						else if (numEmptyNeighbors == 7) {
+							features ['your7Empty']++;
+						}
+						else if (numEmptyNeighbors == 8) {
+							features ['your8Empty']++;
+						}
+						if (yourCols [j] == 0) {
+							yourCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == '-') {
+						var flipPotential = self.getFlipPotential (i, j, board, player);
+						if (flipPotential > 0) {
+							if (flipPotential == 1) {
+								features ['my1Flip']++;
+							}
+							else if (flipPotential == 2) {
+								features ['my2Flip']++;
+							}
+							else if (flipPotential == 3) {
+								features ['my3Flip']++;
+							}
+							else if (flipPotential == 4) {
+								features ['my4Flip']++;
+							}
+							else if (flipPotential == 5) {
+								features ['my5Flip']++;
+							}
+							else if (flipPotential == 6) {
+								features ['my6Flip']++;
+							}
+							else if (flipPotential == 7) {
+								features ['my7Flip']++;
+							}
+							else if (flipPotential == 8) {
+								features ['my8Flip']++;
+							}
+						}
+						else if (flipPotential < 0) {
+							if (flipPotential == -(1)) {
+								features ['your1Flip']++;
+							}
+							else if (flipPotential == -(2)) {
+								features ['your2Flip']++;
+							}
+							else if (flipPotential == -(3)) {
+								features ['your3Flip']++;
+							}
+							else if (flipPotential == -(4)) {
+								features ['your4Flip']++;
+							}
+							else if (flipPotential == -(5)) {
+								features ['your5Flip']++;
+							}
+							else if (flipPotential == -(6)) {
+								features ['your6Flip']++;
+							}
+							else if (flipPotential == -(7)) {
+								features ['your7Flip']++;
+							}
+							else if (flipPotential == -(8)) {
+								features ['your8Flip']++;
+							}
+						}
+					}
+				}
+				features ['diffPerm'] = features ['myPerm'] - features ['yourPerm'];
+				features ['diffTotal'] = features ['myTotal'] - features ['yourTotal'];
+				var features = function () {
+					var __accu0__ = [];
+					var __iterable0__ = features.py_items ();
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var __left0__ = __iterable0__ [__index0__];
+						var k = __left0__ [0];
+						var v = __left0__ [1];
+						__accu0__.append (list ([k, v / 96.0]));
+					}
+					return dict (__accu0__);
+				} ();
+				features ['myCols'] = sum (myCols) / 12.0;
+				features ['yourCols'] = sum (yourCols) / 12.0;
+				var myLongestPath = game.longestPath (board, player);
+				var yourLongestPath = game.longestPath (board, game.otherPlayer (player));
+				features ['myLongestPath'] = myLongestPath / 12.0;
+				features ['yourLongestPath'] = yourLongestPath / 12.0;
+				features ['diffLongestPath'] = (myLongestPath - yourLongestPath) / 12.0;
+				return features;
 			});}
 		});
 		var GameManager = __class__ ('GameManager', [object], {
 			get __init__ () {return __get__ (this, function (self) {
 				self.game = PathwayzGame ();
 				self.state = game.startState ();
-				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Features': featuresMove, 'PAI Advanced Features': smartFeaturesMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Advanced Beam Minimax': beamMinimaxMoreFeatures, 'PAI Expectimax': advancedExpectimax, 'PAI MCS': monteCarloSearch, 'PAI MCTS': monteCarloTreeSearch});
+				self.policies = dict ({'Human': null, 'PAI Random': randomMove, 'PAI Baseline': baselineMove, 'PAI Advanced Baseline': advancedBaselineMove, 'PAI Features': featuresMove, 'PAI Advanced Features': smartFeaturesMove, 'PAI TDL': TDLfeaturesMove, 'PAI Minimax': advancedMinimax, 'PAI Beam Minimax': beamMinimax, 'PAI Advanced Beam Minimax': beamMinimaxMoreFeatures, 'PAI TDL Beam Minimax': beamMinimaxTDL, 'PAI Expectimax': advancedExpectimax, 'PAI MCS': monteCarloSearch, 'PAI MCTS': monteCarloTreeSearch});
 				self.displayBoard ();
 				self.isAI = dict ({'w': false, 'b': false});
 			});},
@@ -1391,6 +1660,8 @@
 			__all__.MIN = MIN;
 			__all__.Node = Node;
 			__all__.PathwayzGame = PathwayzGame;
+			__all__.TDLevaluationFunction = TDLevaluationFunction;
+			__all__.TDLfeaturesMove = TDLfeaturesMove;
 			__all__.advancedBaselineMove = advancedBaselineMove;
 			__all__.advancedExpectimax = advancedExpectimax;
 			__all__.advancedMinimax = advancedMinimax;
@@ -1398,6 +1669,7 @@
 			__all__.baselineMove = baselineMove;
 			__all__.beamMinimax = beamMinimax;
 			__all__.beamMinimaxMoreFeatures = beamMinimaxMoreFeatures;
+			__all__.beamMinimaxTDL = beamMinimaxTDL;
 			__all__.beamScores = beamScores;
 			__all__.depthCharge = depthCharge;
 			__all__.evaluationFunction = evaluationFunction;
@@ -1406,6 +1678,7 @@
 			__all__.featuresMove = featuresMove;
 			__all__.game = game;
 			__all__.gameManager = gameManager;
+			__all__.initOpponentWeights = initOpponentWeights;
 			__all__.initSmartFeatureWeights = initSmartFeatureWeights;
 			__all__.minimax = minimax;
 			__all__.monteCarloSearch = monteCarloSearch;
