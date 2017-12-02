@@ -241,37 +241,29 @@ class PathwayzGame:
 
     def findFrontierMoves(self, board, player):
         frontierSpacesChecked = [[False for i in range(12)] for j in range(8)]
-        frontierPlaces = []
-        frontierFlips = []
+        leftFrontierPlaces = []
+        rightFrontierPlaces = []
+        leftFrontierFlips = []
+        rightFrontierFlips = []
         for i,j in self.leftEdges:
             for row,col in self.surroundingPlaces(i,j):
                 if not frontierSpacesChecked[row][col]:
                     frontierSpacesChecked[row][col] = True
                     if board[row][col] == '-':
-                        frontierPlaces.append((row,col))
+                        leftFrontierPlaces.append((row,col))
                     elif board[row][col] == self.otherPlayer(player):
                         # must be regular piece
-                        frontierFlips.append((row,col))
-                        """
-                        for neighborRow, neighborCol in self.surroundingPlaces(row,col):
-                            if board[neighborRow][neighborCol] == '-':
-                                frontierFlips.add((neighborRow, neighborCol))
-                        """
+                        leftFrontierFlips.append((row,col))
         for i,j in self.rightEdges:
             for row,col in self.surroundingPlaces(i,j):
                 if not frontierSpacesChecked[row][col]:
                     frontierSpacesChecked[row][col] = True
                     if board[row][col] == '-':
-                        frontierPlaces.append((row,col))
+                        rightFrontierPlaces.append((row,col))
                     elif board[row][col] == self.otherPlayer(player):
                         # must be regular piece
-                        frontierFlips.append((row,col))
-                        """
-                        for neighborRow, neighborCol in self.surroundingPlaces(row,col):
-                            if board[neighborRow][neighborCol] == '-':
-                                frontierFlips.add((neighborRow, neighborCol))
-                        """
-        return (frontierPlaces, frontierFlips)
+                        rightFrontierFlips.append((row,col))
+        return (leftFrontierPlaces, rightFrontierPlaces, leftFrontierFlips, rightFrontierFlips)
 
     def findPathFromSquare(self, board, player, row, col):
         for i, j in self.surroundingPlaces(row, col):
@@ -286,9 +278,12 @@ class PathwayzGame:
     
     def findLongestFuturePath(self, board, player, longestPath):
         longestFuturePath = longestPath
-        numPathMoves = 0
-        frontierPlaces, frontierFlips = self.findFrontierMoves(board, player)
-        for frontier in frontierPlaces:
+        #numPathMoves = 0
+        leftFrontierMoves = 0
+        rightFrontierMoves = 0
+        leftFrontierPlaces, rightFrontierPlaces, leftFrontierFlips, rightFrontierFlips = self.findFrontierMoves(board, player)
+        
+        for frontier in leftFrontierPlaces:
             self.alreadyChecked = [[False for x in range(12)] for y in range(8)]
             i, j = frontier
             self.leftCol = j
@@ -296,12 +291,27 @@ class PathwayzGame:
             self.findPathFromSquare(board, player, i, j) 
             futurePath = self.rightCol - self.leftCol + 1
             if futurePath > longestPath:
-                numPathMoves += 1
+                #numPathMoves += 1
+                leftFrontierMoves += 1
+                if futurePath > longestFuturePath:
+                    longestFuturePath = futurePath
+
+        for frontier in rightFrontierPlaces:
+            self.alreadyChecked = [[False for x in range(12)] for y in range(8)]
+            i, j = frontier
+            self.leftCol = j
+            self.rightCol = j
+            self.findPathFromSquare(board, player, i, j) 
+            futurePath = self.rightCol - self.leftCol + 1
+            if futurePath > longestPath:
+                #numPathMoves += 1
+                rightFrontierMoves += 1
                 if futurePath > longestFuturePath:
                     longestFuturePath = futurePath
 
         alreadyFlipped = [[False for x in range(12)] for y in range(8)]
-        for frontier in frontierFlips:
+        
+        for frontier in leftFrontierFlips:
             i, j = frontier
             for row,col  in self.surroundingPlaces(i, j):
                 if board[row][col] == '-' and not alreadyFlipped[row][col]:
@@ -315,11 +325,29 @@ class PathwayzGame:
                     self.findPathFromSquare(newBoard, player, i, j)
                     futurePath = self.rightCol - self.leftCol + 1
                     if futurePath > longestPath:
-                        numPathMoves += 1
+                        leftFrontierMoves += 1
                         if futurePath > longestFuturePath:
                             longestFuturePath = futurePath
 
-        return (longestFuturePath, numPathMoves)
+        for frontier in rightFrontierFlips:
+            i, j = frontier
+            for row,col  in self.surroundingPlaces(i, j):
+                if board[row][col] == '-' and not alreadyFlipped[row][col]:
+                    alreadyFlipped[row][col] = True
+                    action = (row, col, True)
+                    newState = game.simulatedMove((board, player), action)
+                    newBoard, otherPlayer = newState
+                    self.alreadyChecked = [[False for x in range(12)] for y in range(8)]
+                    self.leftCol = j
+                    self.rightCol = j
+                    self.findPathFromSquare(newBoard, player, i, j)
+                    futurePath = self.rightCol - self.leftCol + 1
+                    if futurePath > longestPath:
+                        rightFrontierMoves += 1
+                        if futurePath > longestFuturePath:
+                            longestFuturePath = futurePath
+
+        return (longestFuturePath, leftFrontierMoves, rightFrontierMoves)
 
     def simulatedMove(self, state, action):
         # Simulates a move with a temporary board
@@ -493,12 +521,21 @@ class PathwayzGame:
         myLongestPath = self.findLongestPathEdges(board, player)
         features['myLongestPath'] = myLongestPath / 12.0
         features['myLongestPathSquared'] = myLongestPath**2 / 144.0   
-        myLongestFuturePath, myPathFlex = self.findLongestFuturePath(board, player, myLongestPath)
+        myLongestFuturePath, myLeftFrontierFlex, myRightFrontierFlex = self.findLongestFuturePath(board, player, myLongestPath)
+        myPathFlex = myLeftFrontierFlex + myRightFrontierFlex
         features['myLongestFuturePath'] = myLongestFuturePath / 12.0
         features['myLongestFuturePathSquared'] = myLongestFuturePath**2 / 144.0
         myOneTurnAway = (myLongestFuturePath == 12)
         features['myOneTurnAway'] = myOneTurnAway
-        features['blockedMe'] = (myPathFlex == 0) and not (myLongestPath == 0 or myLongestPath == 12)
+        if myLongestPath <= 1 or myLongestPath == 12:
+            blockedMe = False
+        elif myLeftFrontierFlex == 0 and len(self.leftEdges) > 0 and self.leftEdges[0][1] != 0:
+            blockedMe = True
+        elif myRightFrontierFlex == 0 and len(self.rightEdges) > 0 and self.rightEdges[0][1] != 11:
+            blockedMe = True
+        else:
+            blockedMe = False
+        features['blockedMe'] = blockedMe
         #blocked might be better represented by (myLeftFrontier or myRightFrontier is empty) and (myLongestPath ! 0 or 12)
         #features['myPathFlex'] = (myLongestPath * myPathFlex) / 96.0
         features['myPathFlex'] = myPathFlex / 96.0
@@ -513,12 +550,21 @@ class PathwayzGame:
         yourLongestPath = self.findLongestPathEdges(board, self.otherPlayer(player))
         features['yourLongestPath'] = yourLongestPath / 12.0
         features['yourLongestPathSquared'] = yourLongestPath**2 / 144.0
-        yourLongestFuturePath, yourPathFlex = self.findLongestFuturePath(board, self.otherPlayer(player), yourLongestPath)
+        yourLongestFuturePath, yourLeftFrontierFlex, yourRightFrontierFlex = self.findLongestFuturePath(board, self.otherPlayer(player), yourLongestPath)
+        yourPathFlex = yourLeftFrontierFlex + yourRightFrontierFlex
         features['yourLongestFuturePath'] = yourLongestFuturePath / 12.0
         features['yourLongestFuturePathSquared'] = yourLongestFuturePath**2 / 144.0
         yourOneTurnAway = (yourLongestFuturePath == 12)
         features['yourOneTurnAway'] = yourOneTurnAway
-        features['blockedYou'] = (yourPathFlex == 0) and not (yourLongestPath == 0 or yourLongestPath == 12)
+        if yourLongestPath <= 1 or yourLongestPath == 12:
+            blockedYou = False
+        elif yourLeftFrontierFlex == 0 and len(self.leftEdges) > 0 and self.leftEdges[0][1] != 0:
+            blockedYou = True
+        elif yourRightFrontierFlex == 0 and len(self.rightEdges) > 0 and self.rightEdges[0][1] != 11:
+            blockedYou = True
+        else:
+            blockedYou = False
+        features['blockedYou'] = blockedYou
         #features['yourPathFlex'] = (yourLongestPath * yourPathFlex) / 96.0
         features['yourPathFlex'] = yourPathFlex / 96.0
 
@@ -530,6 +576,7 @@ class PathwayzGame:
         #print "diff your future path %d" % (diffYourFuturePath)
 
         features['diffLongestPath'] = (myLongestPath - yourLongestPath) / 12.0
+        features['diffLongestFuturePath'] = (myLongestFuturePath - yourLongestFuturePath) / 12.0
         features['ahead'] = myLongestPath > yourLongestPath
         features['futureAhead'] = myLongestFuturePath > yourLongestFuturePath
         # could also add myLongestFuturePath > yourLongestFuturePath
@@ -659,8 +706,8 @@ class smartPAI:
 
     def updateWeights(self, game, player, oldBoard, newBoard):
         # Updates weights of PAI
-        #eta = 0.001
-        eta = 0.0001
+        eta = 0.001
+        #eta = 0.0005
         oldScore = self.evaluationFunction(game, oldBoard, player)
         newScore = self.evaluationFunction(game, newBoard, player)
         features = game.smartFeatures(oldBoard, player)
@@ -679,13 +726,12 @@ class smartPAI:
             scores.append((score, action))
         sortedScores = sorted(scores, key=lambda score: score[0], reverse=True)
         
-        """
         epsilon = random.uniform(0, epsMax)
-        for i in range(min(15, len(sortedScores))):
+        for i in range(min(5, len(sortedScores))):
             if epsilon <= (2**(i+1) - 1) / float(2**(i+1)):
+                #print i
                 chosenScore, chosenAction = sortedScores[i]
                 return chosenAction
-        """
 
         bestScore, bestAction = sortedScores[0]
         return bestAction
@@ -700,19 +746,31 @@ def playGame(game, PAI1, PAI1_starts, opponent, maxEpsilon):
         myTurn = game.succ(yourTurn, opponent.epsilonMove(game, yourTurn, maxEpsilon))
 
     while not (game.isEnd(myTurn)):
+        """
         print "MY TURN"
         game.printBoard(myTurn)
         myBoard, me = myTurn
         features = game.smartFeatures(myBoard, me)
         print features
+        if features['blockedMe']:
+            print "I GOT BLOCKED!"
+        if features['blockedYou']:
+            print "YOU GOT BLOCKED!"
         print PAI1.evaluationFunction(game, myBoard, me)
         print "YOUR TURN"
+        """
         yourTurn = game.succ(myTurn, PAI1.epsilonMove(game, myTurn, maxEpsilon))
+        """
         game.printBoard(yourTurn)
         yourBoard, you = yourTurn
         features = game.smartFeatures(yourBoard, me)
         print features
+        if features['blockedMe']:
+            print "I GOT BLOCKED!"
+        if features['blockedYou']:
+            print "YOU GOT BLOCKED!"
         print PAI1.evaluationFunction(game, yourBoard, me)
+        """
         if game.isEnd(yourTurn):
             PAI1.updateWeights(game, myTurn[1], myTurn[0], yourTurn[0])
             endState = yourTurn
@@ -729,9 +787,9 @@ def playGame(game, PAI1, PAI1_starts, opponent, maxEpsilon):
     else:
         return 'b'
 
-PAI = smartPAI(weightFile='handpicked_path_weights.txt')
-opponent = smartPAI(weightFile='adv_baseline_weights.txt')
-maxEpsilon = 0.9995
+PAI = smartPAI(weightFile='smartPathPAI_v_smartPathPAI_winRate0.56_game250.txt')
+opponent = smartPAI(weightFile='handpicked_path_weights.txt')
+maxEpsilon = 1
 # chooses randomly (weighted) among top 10 moves
 start_time = time.time()
 wins = {'PAI':0, 'Opponent':0, 'Draw':0}
@@ -746,7 +804,7 @@ for i in range(numGames):
             print "PAI wins!"
         elif winner == 'b':
             wins['Opponent'] += 1
-            print "Opponent wins..."
+            print "Opponent wins."
         else:
             wins['Draw'] += 1
             print "Draw..."
@@ -754,7 +812,7 @@ for i in range(numGames):
         winner = playGame(game, PAI, False, opponent, maxEpsilon)
         if winner == 'w':
             wins['Opponent'] += 1
-            print "Opponent wins..."
+            print "Opponent wins."
         elif winner == 'b':
             wins['PAI'] += 1
             print "PAI wins!"
@@ -765,25 +823,31 @@ for i in range(numGames):
     numGamesPlayed += 1
 
     if (i%10) == 0:
-        print(i)
+        print "%d GAMES" % (i)
         print "PAI: %d" % (wins['PAI'])
         print "Opponent: %d" % (wins['Opponent'])
         winRate = float(wins['PAI']) / (wins['PAI'] + wins['Opponent'] + wins['Draw'])
         print "PAI's current win rate: %f" % (winRate)
         print 'Played %d games in %s seconds' % (numGamesPlayed, time.time() - start_time)
 
-    """
+
     if (i%50) == 0 and i != 0:
         print "-----------------"
         #print '50 games were played in %s seconds' % time
         print "Writing file..."
-        fileName = 'smartPathPAI_v_smartPathPAI%d.txt' % (i)
+        fileName = 'smartPathPAI_v_smartPathPAI_winRate%.2f_game%d.txt' % (winRate, i+250)
         f = open(fileName, 'w')
         json.dump(PAI.weights, f)
         f.close()
         if winRate >= 0.60:
             print "Updating to better opponent..."
             opponent = smartPAI(weightFile=fileName)
+        elif winRate <= 0.20:
+            print "Updating to random opponent..."
+            opponent = smartPAI(weightFile='random_weights.txt')
+        elif winRate <= 0.30:
+            print "Updating to baseline opponent..."
+            opponent = smartPAI(weightFile='baseline_weights.txt')
         elif winRate <= 0.40:
             print "Updating to advanced baseline opponent..."
             opponent = smartPAI(weightFile='adv_baseline_weights.txt')
@@ -795,10 +859,10 @@ for i in range(numGames):
         start_time = time.time()
         numGamesPlayed = 0
 
-    
+    """
     if (i%100) == 0 and winRate < 0.65:
         print "Writing file..."
-        fileName = 'pathPAI_v_pathPAI%d.txt' % (i+200)
+        fileName = 'pathPAI_v_pathPAI%d.txt' % (i)
         f = open(fileName, 'w')
         json.dump(PAI.weights, f)
         f.close()

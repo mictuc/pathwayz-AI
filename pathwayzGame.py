@@ -482,6 +482,11 @@ def initOpponentWeights():
     weights = {"your2Flip": 0.7822916666666648, "myPerm": 6.375000000000007, "diffPerm": 5.657291666666555, "my2Flip": -0.43645833333333245, "your1Flip": 0.5760416666666688, "your2Empty": -0.8906250000000077, "my8Empty": -0.047916666666666705, "your4Flip": -0.09791666666666667, "my3Flip": 0.0500000000000001, "your8Flip": -0.1, "your5Empty": 0.220833333333333, "your8Empty": 0.09479166666666669, "yourCols": -4.266666666666366, "your3Empty": -0.13125, "diffLongestPath": 91.69166666666835, "yourPerm": -4.282291666666636, "my8Flip": 0.1, "my5Empty": -0.005208333333333049, "myTotal": 6.836458333333379, "diffTotal": 9.201041666666528, "my4Empty": 0.8666666666666678, "yourLongestPath": -34.5416666666668, "my4Flip": 0.09895833333333334, "your6Flip": -0.1, "your1Empty": -0.03229166666666664, "your7Empty": 0.06979166666666668, "my3Empty": 0.596875000000004, "my1Flip": -1.504166666666667, "my6Flip": 0.1, "myLongestPath": 57.150000000000546, "myCols": 26.93333333333583, "your6Empty": 0.055208333333333366, "your5Flip": -0.09687500000000002, "my6Empty": 0.0697916666666667, "my7Flip": 0.1, "my7Empty": -0.05000000000000005, "your4Empty": -0.06874999999999995, "your7Flip": -0.1, "my5Flip": 0.1, "yourTotal": -2.364583333333319, "your3Flip": -0.07708333333333331, "my1Empty": 0.35937499999999944, "my2Empty": 1.27187500000002}
     return weights
 
+def initSmartOpponentWeights():
+    #weights = dict(float)
+    weights = {"your2Flip": 1.056770833333335, "myPerm": 6.885937499999994, "your4Flip": -0.08072916666666671, "your6Empty": 0, "your1Flip": 1.4874999999999974, "myLongestPermPath": 23.88749999999985, "my8Empty": 0, "diffPerm": 4.184374999999997, "myOneTurnAway": 73.15000000000013, "onlyTurnAway": 72.65000000000016, "your5Empty": 0, "your8Empty": 0, "your2Empty": -0.24114583333333348, "myLongestFuturePath": 35.37083333333433, "yourCols": 2.4458333333333497, "blockedMe": -18.649999999999995, "your3Empty": 0, "diffLongestPath": 54.299999999998704, "yourPathFlex": 0, "yourPerm": -2.298437500000008, "myPathFlex": 0, "blockedYou": 24.650000000000084, "my5Empty": 0, "myTotal": 6.554687500000025, "diffTotal": 5.864062499999954, "yourLongestPermPath": -7.7791666666666455, "my3Flip": 0.08385416666666674, "my4Flip": 0.09114583333333334, "futureAhead": 70.65000000000026, "your1Empty": 0, "yourLongestPathSquared": -32.36319444444533, "your7Empty": 0, "my3Empty": 0, "my1Flip": 0.9515625000000025, "myLongestPath": 46.73333333333455, "myCols": 24.09583333333396, "my2Flip": -0.18437499999999996, "my6Empty": 0, "my2Empty": 0.7708333333333343, "my7Empty": 0, "ahead": 105.34999999999832, "your3Flip": 0.07395833333333346, "diffLongestFuturePath": 30.291666666666504, "myLongestFuturePathSquared": 37.923958333334184, "my4Empty": 0, "yourTotal": 0.19062499999999877, "your4Empty": 0, "yourOneTurnAway": -57.80000000000055, "myLongestPathSquared": 56.31250000000151, "yourLongestFuturePath": -1.9208333333333298, "my1Empty": -0.01, "yourLongestFuturePathSquared": -12.174652777777599, "yourLongestPath": -15.566666666666364}
+    return weights
+
 def smartEvaluationFunction(game, board, player):
     features = game.smartFeatures(board, player)
     weights = initSmartFeatureWeights()
@@ -491,8 +496,10 @@ def smartEvaluationFunction(game, board, player):
     return value
 
 def TDLevaluationFunction(game, board, player):
-    features = game.TDLfeatures(board, player)
-    weights = initOpponentWeights()
+    #features = game.TDLfeatures(board, player)
+    features = game.smartFeaturesTDL(board, player)
+    #weights = initOpponentWeights()
+    weights = initSmartOpponentWeights()
     value = sum([features[k] * weights[k] for k in features.keys()])
     if game.isEnd((board, player)):
         return game.utility((board, player)) + value
@@ -871,6 +878,351 @@ class PathwayzGame:
         # ADD FEATURE FOR LONGEST PATH AFTER FLIP
         return features
 
+    def findPermPathLength(self, board, player, row, col):
+        # Checks for the longest path (in terms of columns) from the left
+        farthestCol = -1
+        for i, j in self.surroundingPlaces(row, col):
+            if self.permSpaces[i][j] == player:
+                if j > farthestCol:
+                    farthestCol = j
+                if j == 11:
+                    return 11
+                elif not self.alreadyChecked[i][j]:
+                    self.alreadyChecked[i][j] = True
+                    maxCol = self.findPermPathLength(board, player, i, j)
+                    if maxCol > farthestCol:
+                        farthestCol = maxCol
+        return farthestCol
+
+    def findLongestPermPath(self, board, player):
+        # Takes in a board and player and returns the longest contiguous
+        # path (in terms of length of columns traversed) by the player
+        self.alreadyChecked = [[False for i in range(12)] for j in range(8)]
+        longestPath = -1
+        for i,j in [(i, j) for j in range(12) for i in range(8)]:
+            if self.permSpaces[i][j] == player:
+                if not self.alreadyChecked[i][j]:
+                    self.alreadyChecked[i][j] = True
+                    newPath = self.findPermPathLength(board, player, i, j) - j
+                    if newPath > longestPath:
+                        longestPath = newPath
+            # Complete path
+            if longestPath == 11:
+                return 12
+        return longestPath + 1
+
+    def findPathLengthEdges(self, board, player, row, col, leftEdge, leftEdges, rightEdges):
+        # Checks for the longest path (in terms of columns) from the left
+        farthestCol = -1
+        for i, j in self.surroundingPlaces(row, col):
+            if board[i][j].lower() == player:
+                if j < leftEdge:
+                    leftEdge = j
+                    leftEdges.append((i,j))
+                elif j == leftEdge:
+                    leftEdges.append((i,j))
+                if j == farthestCol:
+                    rightEdges.append((i,j))
+                elif j > farthestCol:
+                    farthestCol = j
+                    rightEdges = [(i,j)]
+                if j == 11:
+                    return (11, leftEdges, rightEdges)
+                elif not self.alreadyChecked[i][j]:
+                    self.alreadyChecked[i][j] = True
+                    maxCol, newLeftEdges, newRightEdges = self.findPathLengthEdges(board, player, i, j, leftEdge, leftEdges, rightEdges)
+                    if maxCol >= farthestCol:
+                        farthestCol = maxCol
+                        leftEdges = newLeftEdges
+                        rightEdges = newRightEdges
+        return (farthestCol, leftEdges, rightEdges)
+
+    def findLongestPathEdges(self, board, player):
+        # Takes in a board and player and returns the longest contiguous
+        # path (in terms of length of columns traversed) by the player
+        self.alreadyChecked = [[False for i in range(12)] for j in range(8)]
+        self.leftEdges = []
+        self.rightEdges = []
+        longestPath = -1
+        for i,j in [(i, j) for j in range(12) for i in range(8)]:
+            if (board[i][j].lower() == player):
+                if not self.alreadyChecked[i][j]:
+                    self.alreadyChecked[i][j] = True
+                    leftEdge = j
+                    leftEdges = [(i,j)]
+                    rightEdges = [(i,j)]
+                    rightEdge, leftEdges, rightEdges = self.findPathLengthEdges(board, player, i, j, leftEdge, leftEdges, rightEdges)
+                    if rightEdge - leftEdge > longestPath:
+                        longestPath = rightEdge - leftEdge
+                        self.leftEdges = leftEdges
+                        self.rightEdges = rightEdges
+                    elif rightEdge - leftEdge == longestPath:
+                        for k in range(len(leftEdges)):
+                            self.leftEdges.append(leftEdges[k])
+                        #self.leftEdges = self.leftEdges + leftEdges
+                        for k in range(len(rightEdges)):
+                            self.rightEdges.append(rightEdges[k])
+                        #self.rightEdges = self.rightEdges + rightEdges
+            # Complete path
+            if longestPath == 11:
+                return 12
+        return longestPath + 1
+
+    def findFrontierMoves(self, board, player):
+        frontierSpacesChecked = [[False for i in range(12)] for j in range(8)]
+        leftFrontierPlaces = []
+        rightFrontierPlaces = []
+        leftFrontierFlips = []
+        rightFrontierFlips = []
+        for i,j in self.leftEdges:
+            for row,col in self.surroundingPlaces(i,j):
+                if not frontierSpacesChecked[row][col]:
+                    frontierSpacesChecked[row][col] = True
+                    if board[row][col] == '-':
+                        leftFrontierPlaces.append((row,col))
+                    elif board[row][col] == self.otherPlayer(player):
+                        # must be regular piece
+                        leftFrontierFlips.append((row,col))
+        for i,j in self.rightEdges:
+            for row,col in self.surroundingPlaces(i,j):
+                if not frontierSpacesChecked[row][col]:
+                    frontierSpacesChecked[row][col] = True
+                    if board[row][col] == '-':
+                        rightFrontierPlaces.append((row,col))
+                    elif board[row][col] == self.otherPlayer(player):
+                        # must be regular piece
+                        rightFrontierFlips.append((row,col))
+        return (leftFrontierPlaces, rightFrontierPlaces, leftFrontierFlips, rightFrontierFlips)
+
+    def findPathFromSquare(self, board, player, row, col):
+        for i, j in self.surroundingPlaces(row, col):
+            if not self.alreadyChecked[i][j]:
+                self.alreadyChecked[i][j] = True
+                if board[i][j].lower() == player:
+                    if j > self.rightCol:
+                        self.rightCol = j
+                    if j < self.leftCol:
+                        self.leftCol = j
+                    self.findPathFromSquare(board, player, i, j)
+    
+    def findLongestFuturePath(self, board, player, longestPath):
+        longestFuturePath = longestPath
+        #numPathMoves = 0
+        leftFrontierMoves = 0
+        rightFrontierMoves = 0
+        leftFrontierPlaces, rightFrontierPlaces, leftFrontierFlips, rightFrontierFlips = self.findFrontierMoves(board, player)
+        
+        for frontier in leftFrontierPlaces:
+            self.alreadyChecked = [[False for x in range(12)] for y in range(8)]
+            i, j = frontier
+            self.leftCol = j
+            self.rightCol = j
+            self.findPathFromSquare(board, player, i, j) 
+            futurePath = self.rightCol - self.leftCol + 1
+            if futurePath > longestPath:
+                #numPathMoves += 1
+                leftFrontierMoves += 1
+                if futurePath > longestFuturePath:
+                    longestFuturePath = futurePath
+
+        for frontier in rightFrontierPlaces:
+            self.alreadyChecked = [[False for x in range(12)] for y in range(8)]
+            i, j = frontier
+            self.leftCol = j
+            self.rightCol = j
+            self.findPathFromSquare(board, player, i, j) 
+            futurePath = self.rightCol - self.leftCol + 1
+            if futurePath > longestPath:
+                #numPathMoves += 1
+                rightFrontierMoves += 1
+                if futurePath > longestFuturePath:
+                    longestFuturePath = futurePath
+
+        alreadyFlipped = [[False for x in range(12)] for y in range(8)]
+        
+        for frontier in leftFrontierFlips:
+            i, j = frontier
+            for row,col  in self.surroundingPlaces(i, j):
+                if board[row][col] == '-' and not alreadyFlipped[row][col]:
+                    alreadyFlipped[row][col] = True
+                    action = (row, col, True)
+                    newState = game.simulatedMove((board, player), action)
+                    newBoard, otherPlayer = newState
+                    self.alreadyChecked = [[False for x in range(12)] for y in range(8)]
+                    self.leftCol = j
+                    self.rightCol = j
+                    self.findPathFromSquare(newBoard, player, i, j)
+                    futurePath = self.rightCol - self.leftCol + 1
+                    if futurePath > longestPath:
+                        leftFrontierMoves += 1
+                        if futurePath > longestFuturePath:
+                            longestFuturePath = futurePath
+
+        for frontier in rightFrontierFlips:
+            i, j = frontier
+            for row,col  in self.surroundingPlaces(i, j):
+                if board[row][col] == '-' and not alreadyFlipped[row][col]:
+                    alreadyFlipped[row][col] = True
+                    action = (row, col, True)
+                    newState = game.simulatedMove((board, player), action)
+                    newBoard, otherPlayer = newState
+                    self.alreadyChecked = [[False for x in range(12)] for y in range(8)]
+                    self.leftCol = j
+                    self.rightCol = j
+                    self.findPathFromSquare(newBoard, player, i, j)
+                    futurePath = self.rightCol - self.leftCol + 1
+                    if futurePath > longestPath:
+                        rightFrontierMoves += 1
+                        if futurePath > longestFuturePath:
+                            longestFuturePath = futurePath
+
+        return (longestFuturePath, leftFrontierMoves, rightFrontierMoves)
+
+    def smartFeaturesTDL(self, board, player):
+        featureNames = ['myLongestPath','yourLongestPath','ahead', 'futureAhead', 'onlyTurnAway', 'myOneTurnAway', 'yourOneTurnAway', 'myLongestPathSquared', 'yourLongestPathSquared', 'myLongestFuturePath', 'yourLongestFuturePath', 'myLongestFuturePathSquared', 'yourLongestFuturePathSquared', 'diffLongestPath', 'diffLongestFuturePath', 'myLongestPermPath', 'yourLongestPermPath', 'blockedYou', 'blockedMe', 'yourPathFlex', 'myPathFlex', 'myCols','yourCols','myPerm','yourPerm','myTotal','yourTotal','my1Empty','your1Empty','my2Empty','your2Empty','my3Empty','your3Empty','my4Empty','your4Empty','my5Empty','your5Empty','my6Empty','your6Empty','my7Empty','your7Empty','my8Empty','your8Empty', 'my1Flip','your1Flip','my2Flip','your2Flip','my3Flip','your3Flip','my4Flip','your4Flip']
+        features = {feature:0 for feature in featureNames}
+        #features = collections.defaultdict(int)
+        myCols = [0 for _ in range(12)]
+        yourCols = [0 for _ in range(12)]
+        self.permSpaces = [['-' for i in range(12)] for j in range(8)]
+        for i,j in [(i, j) for j in range(12) for i in range(8)]:
+            if board[i][j] == player.upper():
+                features['myPerm'] += 1
+                features['myTotal'] += 1
+                self.permSpaces[i][j] = player
+                if myCols[j] == 0:
+                    myCols[j] = 1
+            elif board[i][j] == self.otherPlayer(player).upper():
+                features['yourPerm'] += 1
+                features['yourTotal'] += 1
+                self.permSpaces[i][j] = self.otherPlayer(player)
+                if yourCols[j] == 0:
+                    yourCols[j] = 1
+            elif board[i][j] == player:
+                features['myTotal'] += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    features['myPerm'] += 1
+                    self.permSpaces[i][j] = player
+                elif numEmptyNeighbors == 1:
+                    features['my1Empty'] += 1
+                elif numEmptyNeighbors == 2:
+                    features['my2Empty'] += 1
+                elif numEmptyNeighbors == 3:
+                    features['my3Empty'] += 1
+                elif numEmptyNeighbors == 4:
+                    features['my4Empty'] += 1
+                elif numEmptyNeighbors == 5:
+                    features['my5Empty'] += 1
+                elif numEmptyNeighbors == 6:
+                    features['my6Empty'] += 1
+                elif numEmptyNeighbors == 7:
+                    features['my7Empty'] += 1
+                elif numEmptyNeighbors == 8:
+                    features['my8Empty'] += 1
+                if myCols[j] == 0:
+                    myCols[j] = 1
+            elif board[i][j] == self.otherPlayer(player):
+                features['yourTotal'] += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    features['yourPerm'] += 1
+                    self.permSpaces[i][j] = self.otherPlayer(player)
+                elif numEmptyNeighbors == 1:
+                    features['your1Empty'] += 1
+                elif numEmptyNeighbors == 2:
+                    features['your2Empty'] += 1
+                elif numEmptyNeighbors == 3:
+                    features['your3Empty'] += 1
+                elif numEmptyNeighbors == 4:
+                    features['your4Empty'] += 1
+                elif numEmptyNeighbors == 5:
+                    features['your5Empty'] += 1
+                elif numEmptyNeighbors == 6:
+                    features['your6Empty'] += 1
+                elif numEmptyNeighbors == 7:
+                    features['your7Empty'] += 1
+                elif numEmptyNeighbors == 8:
+                    features['your8Empty'] += 1
+                if yourCols[j] == 0:
+                    yourCols[j] = 1
+            elif board[i][j] == '-':
+                myFlip, yourFlip = self.getFlipPotential(i, j, board, player)
+                flipPotential = myFlip - yourFlip
+                if flipPotential > 0:
+                    if flipPotential == 1:
+                        features['my1Flip'] += 1
+                    elif flipPotential == 2:
+                        features['my2Flip'] += 1
+                    elif flipPotential == 3:
+                        features['my3Flip'] += 1
+                    elif flipPotential >= 4:
+                        features['my4Flip'] += 1
+                elif flipPotential < 0:
+                    if flipPotential == -1:
+                        features['your1Flip'] += 1
+                    elif flipPotential == -2:
+                        features['your2Flip'] += 1
+                    elif flipPotential == -3:
+                        features['your3Flip'] += 1
+                    elif flipPotential <= -4:
+                        features['your4Flip'] += 1
+        features['diffPerm'] = features['myPerm'] - features['yourPerm']
+        features['diffTotal'] = features['myTotal'] - features['yourTotal']
+        features = {k:v/96.0 for k, v in features.items()}
+        features['myCols'] = sum(myCols) / 12.0
+        features['yourCols'] = sum(yourCols) / 12.0
+        features['myLongestPermPath'] = self.findLongestPermPath(board, player) / 12.0
+        features['yourLongestPermPath'] = self.findLongestPermPath(board, self.otherPlayer(player)) / 12.0
+
+        myLongestPath = self.findLongestPathEdges(board, player)
+        features['myLongestPath'] = myLongestPath / 12.0
+        features['myLongestPathSquared'] = myLongestPath**2 / 144.0   
+        myLongestFuturePath, myLeftFrontierFlex, myRightFrontierFlex = self.findLongestFuturePath(board, player, myLongestPath)
+        myPathFlex = myLeftFrontierFlex + myRightFrontierFlex
+        features['myLongestFuturePath'] = myLongestFuturePath / 12.0
+        features['myLongestFuturePathSquared'] = myLongestFuturePath**2 / 144.0
+        myOneTurnAway = (myLongestFuturePath == 12)
+        features['myOneTurnAway'] = myOneTurnAway
+        if myLongestPath <= 1 or myLongestPath == 12:
+            blockedMe = False
+        elif myLeftFrontierFlex == 0 and len(self.leftEdges) > 0 and self.leftEdges[0][1] != 0:
+            blockedMe = True
+        elif myRightFrontierFlex == 0 and len(self.rightEdges) > 0 and self.rightEdges[0][1] != 11:
+            blockedMe = True
+        else:
+            blockedMe = False
+        features['blockedMe'] = blockedMe
+        features['myPathFlex'] = myPathFlex / 96.0
+
+        yourLongestPath = self.findLongestPathEdges(board, self.otherPlayer(player))
+        features['yourLongestPath'] = yourLongestPath / 12.0
+        features['yourLongestPathSquared'] = yourLongestPath**2 / 144.0
+        yourLongestFuturePath, yourLeftFrontierFlex, yourRightFrontierFlex = self.findLongestFuturePath(board, self.otherPlayer(player), yourLongestPath)
+        yourPathFlex = yourLeftFrontierFlex + yourRightFrontierFlex
+        features['yourLongestFuturePath'] = yourLongestFuturePath / 12.0
+        features['yourLongestFuturePathSquared'] = yourLongestFuturePath**2 / 144.0
+        yourOneTurnAway = (yourLongestFuturePath == 12)
+        features['yourOneTurnAway'] = yourOneTurnAway
+        if yourLongestPath <= 1 or yourLongestPath == 12:
+            blockedYou = False
+        elif yourLeftFrontierFlex == 0 and len(self.leftEdges) > 0 and self.leftEdges[0][1] != 0:
+            blockedYou = True
+        elif yourRightFrontierFlex == 0 and len(self.rightEdges) > 0 and self.rightEdges[0][1] != 11:
+            blockedYou = True
+        else:
+            blockedYou = False
+        features['blockedYou'] = blockedYou
+        features['yourPathFlex'] = yourPathFlex / 96.0
+
+        features['diffLongestPath'] = (myLongestPath - yourLongestPath) / 12.0
+        features['diffLongestFuturePath'] = (myLongestFuturePath - yourLongestFuturePath) / 12.0
+        features['ahead'] = myLongestPath > yourLongestPath
+        features['futureAhead'] = myLongestFuturePath > yourLongestFuturePath
+        features['onlyTurnAway'] = myOneTurnAway and not yourOneTurnAway
+
+        return features
+
 class GameManager():
     def __init__(self):
         # Initializes GameManager object
@@ -901,6 +1253,9 @@ class GameManager():
         action = policy(self.game, self.state)
         self.state = game.succ(self.state, action)
         self.displayBoard(self.coordinatesToSqNo(action))
+        curBoard, curPlayer = self.state
+        curFeatures = game.smartFeaturesTDL(curBoard, game.otherPlayer(curPlayer))
+        print(curFeatures)
         if self.game.isEnd(self.state):
             if self.game.isWinner(self.state, player):
                 self.displayWinner(player)

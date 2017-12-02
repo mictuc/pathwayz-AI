@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-11-29 15:43:49
+// Transcrypt'ed from Python, 2017-12-02 14:24:10
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3403,6 +3403,10 @@ function pathwayzGame () {
 			var weights = dict ({'your2Flip': 0.7822916666666648, 'myPerm': 6.375000000000007, 'diffPerm': 5.657291666666555, 'my2Flip': -(0.43645833333333245), 'your1Flip': 0.5760416666666688, 'your2Empty': -(0.8906250000000077), 'my8Empty': -(0.047916666666666705), 'your4Flip': -(0.09791666666666667), 'my3Flip': 0.0500000000000001, 'your8Flip': -(0.1), 'your5Empty': 0.220833333333333, 'your8Empty': 0.09479166666666669, 'yourCols': -(4.266666666666366), 'your3Empty': -(0.13125), 'diffLongestPath': 91.69166666666835, 'yourPerm': -(4.282291666666636), 'my8Flip': 0.1, 'my5Empty': -(0.005208333333333049), 'myTotal': 6.836458333333379, 'diffTotal': 9.201041666666528, 'my4Empty': 0.8666666666666678, 'yourLongestPath': -(34.5416666666668), 'my4Flip': 0.09895833333333334, 'your6Flip': -(0.1), 'your1Empty': -(0.03229166666666664), 'your7Empty': 0.06979166666666668, 'my3Empty': 0.596875000000004, 'my1Flip': -(1.504166666666667), 'my6Flip': 0.1, 'myLongestPath': 57.150000000000546, 'myCols': 26.93333333333583, 'your6Empty': 0.055208333333333366, 'your5Flip': -(0.09687500000000002), 'my6Empty': 0.0697916666666667, 'my7Flip': 0.1, 'my7Empty': -(0.05000000000000005), 'your4Empty': -(0.06874999999999995), 'your7Flip': -(0.1), 'my5Flip': 0.1, 'yourTotal': -(2.364583333333319), 'your3Flip': -(0.07708333333333331), 'my1Empty': 0.35937499999999944, 'my2Empty': 1.27187500000002});
 			return weights;
 		};
+		var initSmartOpponentWeights = function () {
+			var weights = dict ({'your2Flip': 1.056770833333335, 'myPerm': 6.885937499999994, 'your4Flip': -(0.08072916666666671), 'your6Empty': 0, 'your1Flip': 1.4874999999999974, 'myLongestPermPath': 23.88749999999985, 'my8Empty': 0, 'diffPerm': 4.184374999999997, 'myOneTurnAway': 73.15000000000013, 'onlyTurnAway': 72.65000000000016, 'your5Empty': 0, 'your8Empty': 0, 'your2Empty': -(0.24114583333333348), 'myLongestFuturePath': 35.37083333333433, 'yourCols': 2.4458333333333497, 'blockedMe': -(18.649999999999995), 'your3Empty': 0, 'diffLongestPath': 54.299999999998704, 'yourPathFlex': 0, 'yourPerm': -(2.298437500000008), 'myPathFlex': 0, 'blockedYou': 24.650000000000084, 'my5Empty': 0, 'myTotal': 6.554687500000025, 'diffTotal': 5.864062499999954, 'yourLongestPermPath': -(7.7791666666666455), 'my3Flip': 0.08385416666666674, 'my4Flip': 0.09114583333333334, 'futureAhead': 70.65000000000026, 'your1Empty': 0, 'yourLongestPathSquared': -(32.36319444444533), 'your7Empty': 0, 'my3Empty': 0, 'my1Flip': 0.9515625000000025, 'myLongestPath': 46.73333333333455, 'myCols': 24.09583333333396, 'my2Flip': -(0.18437499999999996), 'my6Empty': 0, 'my2Empty': 0.7708333333333343, 'my7Empty': 0, 'ahead': 105.34999999999832, 'your3Flip': 0.07395833333333346, 'diffLongestFuturePath': 30.291666666666504, 'myLongestFuturePathSquared': 37.923958333334184, 'my4Empty': 0, 'yourTotal': 0.19062499999999877, 'your4Empty': 0, 'yourOneTurnAway': -(57.80000000000055), 'myLongestPathSquared': 56.31250000000151, 'yourLongestFuturePath': -(1.9208333333333298), 'my1Empty': -(0.01), 'yourLongestFuturePathSquared': -(12.174652777777599), 'yourLongestPath': -(15.566666666666364)});
+			return weights;
+		};
 		var smartEvaluationFunction = function (game, board, player) {
 			var features = game.smartFeatures (board, player);
 			var weights = initSmartFeatureWeights ();
@@ -3421,8 +3425,8 @@ function pathwayzGame () {
 			return value;
 		};
 		var TDLevaluationFunction = function (game, board, player) {
-			var features = game.TDLfeatures (board, player);
-			var weights = initOpponentWeights ();
+			var features = game.smartFeaturesTDL (board, player);
+			var weights = initSmartOpponentWeights ();
 			var value = sum (function () {
 				var __accu0__ = [];
 				var __iterable0__ = features.py_keys ();
@@ -4129,6 +4133,678 @@ function pathwayzGame () {
 				features ['yourLongestPath'] = yourLongestPath / 12.0;
 				features ['diffLongestPath'] = (myLongestPath - yourLongestPath) / 12.0;
 				return features;
+			});},
+			get findPermPathLength () {return __get__ (this, function (self, board, player, row, col) {
+				var farthestCol = -(1);
+				var __iterable0__ = self.surroundingPlaces (row, col);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (self.permSpaces [i] [j] == player) {
+						if (j > farthestCol) {
+							var farthestCol = j;
+						}
+						if (j == 11) {
+							return 11;
+						}
+						else if (!(self.alreadyChecked [i] [j])) {
+							self.alreadyChecked [i] [j] = true;
+							var maxCol = self.findPermPathLength (board, player, i, j);
+							if (maxCol > farthestCol) {
+								var farthestCol = maxCol;
+							}
+						}
+					}
+				}
+				return farthestCol;
+			});},
+			get findLongestPermPath () {return __get__ (this, function (self, board, player) {
+				self.alreadyChecked = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 8; j++) {
+						__accu0__.append (function () {
+							var __accu1__ = [];
+							for (var i = 0; i < 12; i++) {
+								__accu1__.append (false);
+							}
+							return __accu1__;
+						} ());
+					}
+					return __accu0__;
+				} ();
+				var longestPath = -(1);
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (self.permSpaces [i] [j] == player) {
+						if (!(self.alreadyChecked [i] [j])) {
+							self.alreadyChecked [i] [j] = true;
+							var newPath = self.findPermPathLength (board, player, i, j) - j;
+							if (newPath > longestPath) {
+								var longestPath = newPath;
+							}
+						}
+					}
+					if (longestPath == 11) {
+						return 12;
+					}
+				}
+				return longestPath + 1;
+			});},
+			get findPathLengthEdges () {return __get__ (this, function (self, board, player, row, col, leftEdge, leftEdges, rightEdges) {
+				var farthestCol = -(1);
+				var __iterable0__ = self.surroundingPlaces (row, col);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j].lower () == player) {
+						if (j < leftEdge) {
+							var leftEdge = j;
+							leftEdges.append (tuple ([i, j]));
+						}
+						else if (j == leftEdge) {
+							leftEdges.append (tuple ([i, j]));
+						}
+						if (j == farthestCol) {
+							rightEdges.append (tuple ([i, j]));
+						}
+						else if (j > farthestCol) {
+							var farthestCol = j;
+							var rightEdges = list ([tuple ([i, j])]);
+						}
+						if (j == 11) {
+							return tuple ([11, leftEdges, rightEdges]);
+						}
+						else if (!(self.alreadyChecked [i] [j])) {
+							self.alreadyChecked [i] [j] = true;
+							var __left0__ = self.findPathLengthEdges (board, player, i, j, leftEdge, leftEdges, rightEdges);
+							var maxCol = __left0__ [0];
+							var newLeftEdges = __left0__ [1];
+							var newRightEdges = __left0__ [2];
+							if (maxCol >= farthestCol) {
+								var farthestCol = maxCol;
+								var leftEdges = newLeftEdges;
+								var rightEdges = newRightEdges;
+							}
+						}
+					}
+				}
+				return tuple ([farthestCol, leftEdges, rightEdges]);
+			});},
+			get findLongestPathEdges () {return __get__ (this, function (self, board, player) {
+				self.alreadyChecked = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 8; j++) {
+						__accu0__.append (function () {
+							var __accu1__ = [];
+							for (var i = 0; i < 12; i++) {
+								__accu1__.append (false);
+							}
+							return __accu1__;
+						} ());
+					}
+					return __accu0__;
+				} ();
+				self.leftEdges = list ([]);
+				self.rightEdges = list ([]);
+				var longestPath = -(1);
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j].lower () == player) {
+						if (!(self.alreadyChecked [i] [j])) {
+							self.alreadyChecked [i] [j] = true;
+							var leftEdge = j;
+							var leftEdges = list ([tuple ([i, j])]);
+							var rightEdges = list ([tuple ([i, j])]);
+							var __left0__ = self.findPathLengthEdges (board, player, i, j, leftEdge, leftEdges, rightEdges);
+							var rightEdge = __left0__ [0];
+							var leftEdges = __left0__ [1];
+							var rightEdges = __left0__ [2];
+							if (rightEdge - leftEdge > longestPath) {
+								var longestPath = rightEdge - leftEdge;
+								self.leftEdges = leftEdges;
+								self.rightEdges = rightEdges;
+							}
+							else if (rightEdge - leftEdge == longestPath) {
+								for (var k = 0; k < len (leftEdges); k++) {
+									self.leftEdges.append (leftEdges [k]);
+								}
+								for (var k = 0; k < len (rightEdges); k++) {
+									self.rightEdges.append (rightEdges [k]);
+								}
+							}
+						}
+					}
+					if (longestPath == 11) {
+						return 12;
+					}
+				}
+				return longestPath + 1;
+			});},
+			get findFrontierMoves () {return __get__ (this, function (self, board, player) {
+				var frontierSpacesChecked = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 8; j++) {
+						__accu0__.append (function () {
+							var __accu1__ = [];
+							for (var i = 0; i < 12; i++) {
+								__accu1__.append (false);
+							}
+							return __accu1__;
+						} ());
+					}
+					return __accu0__;
+				} ();
+				var leftFrontierPlaces = list ([]);
+				var rightFrontierPlaces = list ([]);
+				var leftFrontierFlips = list ([]);
+				var rightFrontierFlips = list ([]);
+				var __iterable0__ = self.leftEdges;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					var __iterable1__ = self.surroundingPlaces (i, j);
+					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
+						var __left0__ = __iterable1__ [__index1__];
+						var row = __left0__ [0];
+						var col = __left0__ [1];
+						if (!(frontierSpacesChecked [row] [col])) {
+							frontierSpacesChecked [row] [col] = true;
+							if (board [row] [col] == '-') {
+								leftFrontierPlaces.append (tuple ([row, col]));
+							}
+							else if (board [row] [col] == self.otherPlayer (player)) {
+								leftFrontierFlips.append (tuple ([row, col]));
+							}
+						}
+					}
+				}
+				var __iterable0__ = self.rightEdges;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					var __iterable1__ = self.surroundingPlaces (i, j);
+					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
+						var __left0__ = __iterable1__ [__index1__];
+						var row = __left0__ [0];
+						var col = __left0__ [1];
+						if (!(frontierSpacesChecked [row] [col])) {
+							frontierSpacesChecked [row] [col] = true;
+							if (board [row] [col] == '-') {
+								rightFrontierPlaces.append (tuple ([row, col]));
+							}
+							else if (board [row] [col] == self.otherPlayer (player)) {
+								rightFrontierFlips.append (tuple ([row, col]));
+							}
+						}
+					}
+				}
+				return tuple ([leftFrontierPlaces, rightFrontierPlaces, leftFrontierFlips, rightFrontierFlips]);
+			});},
+			get findPathFromSquare () {return __get__ (this, function (self, board, player, row, col) {
+				var __iterable0__ = self.surroundingPlaces (row, col);
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (!(self.alreadyChecked [i] [j])) {
+						self.alreadyChecked [i] [j] = true;
+						if (board [i] [j].lower () == player) {
+							if (j > self.rightCol) {
+								self.rightCol = j;
+							}
+							if (j < self.leftCol) {
+								self.leftCol = j;
+							}
+							self.findPathFromSquare (board, player, i, j);
+						}
+					}
+				}
+			});},
+			get findLongestFuturePath () {return __get__ (this, function (self, board, player, longestPath) {
+				var longestFuturePath = longestPath;
+				var leftFrontierMoves = 0;
+				var rightFrontierMoves = 0;
+				var __left0__ = self.findFrontierMoves (board, player);
+				var leftFrontierPlaces = __left0__ [0];
+				var rightFrontierPlaces = __left0__ [1];
+				var leftFrontierFlips = __left0__ [2];
+				var rightFrontierFlips = __left0__ [3];
+				var __iterable0__ = leftFrontierPlaces;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var frontier = __iterable0__ [__index0__];
+					self.alreadyChecked = function () {
+						var __accu0__ = [];
+						for (var y = 0; y < 8; y++) {
+							__accu0__.append (function () {
+								var __accu1__ = [];
+								for (var x = 0; x < 12; x++) {
+									__accu1__.append (false);
+								}
+								return __accu1__;
+							} ());
+						}
+						return __accu0__;
+					} ();
+					var __left0__ = frontier;
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					self.leftCol = j;
+					self.rightCol = j;
+					self.findPathFromSquare (board, player, i, j);
+					var futurePath = (self.rightCol - self.leftCol) + 1;
+					if (futurePath > longestPath) {
+						leftFrontierMoves++;
+						if (futurePath > longestFuturePath) {
+							var longestFuturePath = futurePath;
+						}
+					}
+				}
+				var __iterable0__ = rightFrontierPlaces;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var frontier = __iterable0__ [__index0__];
+					self.alreadyChecked = function () {
+						var __accu0__ = [];
+						for (var y = 0; y < 8; y++) {
+							__accu0__.append (function () {
+								var __accu1__ = [];
+								for (var x = 0; x < 12; x++) {
+									__accu1__.append (false);
+								}
+								return __accu1__;
+							} ());
+						}
+						return __accu0__;
+					} ();
+					var __left0__ = frontier;
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					self.leftCol = j;
+					self.rightCol = j;
+					self.findPathFromSquare (board, player, i, j);
+					var futurePath = (self.rightCol - self.leftCol) + 1;
+					if (futurePath > longestPath) {
+						rightFrontierMoves++;
+						if (futurePath > longestFuturePath) {
+							var longestFuturePath = futurePath;
+						}
+					}
+				}
+				var alreadyFlipped = function () {
+					var __accu0__ = [];
+					for (var y = 0; y < 8; y++) {
+						__accu0__.append (function () {
+							var __accu1__ = [];
+							for (var x = 0; x < 12; x++) {
+								__accu1__.append (false);
+							}
+							return __accu1__;
+						} ());
+					}
+					return __accu0__;
+				} ();
+				var __iterable0__ = leftFrontierFlips;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var frontier = __iterable0__ [__index0__];
+					var __left0__ = frontier;
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					var __iterable1__ = self.surroundingPlaces (i, j);
+					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
+						var __left0__ = __iterable1__ [__index1__];
+						var row = __left0__ [0];
+						var col = __left0__ [1];
+						if (board [row] [col] == '-' && !(alreadyFlipped [row] [col])) {
+							alreadyFlipped [row] [col] = true;
+							var action = tuple ([row, col, true]);
+							var newState = game.simulatedMove (tuple ([board, player]), action);
+							var __left0__ = newState;
+							var newBoard = __left0__ [0];
+							var otherPlayer = __left0__ [1];
+							self.alreadyChecked = function () {
+								var __accu0__ = [];
+								for (var y = 0; y < 8; y++) {
+									__accu0__.append (function () {
+										var __accu1__ = [];
+										for (var x = 0; x < 12; x++) {
+											__accu1__.append (false);
+										}
+										return __accu1__;
+									} ());
+								}
+								return __accu0__;
+							} ();
+							self.leftCol = j;
+							self.rightCol = j;
+							self.findPathFromSquare (newBoard, player, i, j);
+							var futurePath = (self.rightCol - self.leftCol) + 1;
+							if (futurePath > longestPath) {
+								leftFrontierMoves++;
+								if (futurePath > longestFuturePath) {
+									var longestFuturePath = futurePath;
+								}
+							}
+						}
+					}
+				}
+				var __iterable0__ = rightFrontierFlips;
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var frontier = __iterable0__ [__index0__];
+					var __left0__ = frontier;
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					var __iterable1__ = self.surroundingPlaces (i, j);
+					for (var __index1__ = 0; __index1__ < __iterable1__.length; __index1__++) {
+						var __left0__ = __iterable1__ [__index1__];
+						var row = __left0__ [0];
+						var col = __left0__ [1];
+						if (board [row] [col] == '-' && !(alreadyFlipped [row] [col])) {
+							alreadyFlipped [row] [col] = true;
+							var action = tuple ([row, col, true]);
+							var newState = game.simulatedMove (tuple ([board, player]), action);
+							var __left0__ = newState;
+							var newBoard = __left0__ [0];
+							var otherPlayer = __left0__ [1];
+							self.alreadyChecked = function () {
+								var __accu0__ = [];
+								for (var y = 0; y < 8; y++) {
+									__accu0__.append (function () {
+										var __accu1__ = [];
+										for (var x = 0; x < 12; x++) {
+											__accu1__.append (false);
+										}
+										return __accu1__;
+									} ());
+								}
+								return __accu0__;
+							} ();
+							self.leftCol = j;
+							self.rightCol = j;
+							self.findPathFromSquare (newBoard, player, i, j);
+							var futurePath = (self.rightCol - self.leftCol) + 1;
+							if (futurePath > longestPath) {
+								rightFrontierMoves++;
+								if (futurePath > longestFuturePath) {
+									var longestFuturePath = futurePath;
+								}
+							}
+						}
+					}
+				}
+				return tuple ([longestFuturePath, leftFrontierMoves, rightFrontierMoves]);
+			});},
+			get smartFeaturesTDL () {return __get__ (this, function (self, board, player) {
+				var featureNames = list (['myLongestPath', 'yourLongestPath', 'ahead', 'futureAhead', 'onlyTurnAway', 'myOneTurnAway', 'yourOneTurnAway', 'myLongestPathSquared', 'yourLongestPathSquared', 'myLongestFuturePath', 'yourLongestFuturePath', 'myLongestFuturePathSquared', 'yourLongestFuturePathSquared', 'diffLongestPath', 'diffLongestFuturePath', 'myLongestPermPath', 'yourLongestPermPath', 'blockedYou', 'blockedMe', 'yourPathFlex', 'myPathFlex', 'myCols', 'yourCols', 'myPerm', 'yourPerm', 'myTotal', 'yourTotal', 'my1Empty', 'your1Empty', 'my2Empty', 'your2Empty', 'my3Empty', 'your3Empty', 'my4Empty', 'your4Empty', 'my5Empty', 'your5Empty', 'my6Empty', 'your6Empty', 'my7Empty', 'your7Empty', 'my8Empty', 'your8Empty', 'my1Flip', 'your1Flip', 'my2Flip', 'your2Flip', 'my3Flip', 'your3Flip', 'my4Flip', 'your4Flip']);
+				var features = function () {
+					var __accu0__ = [];
+					var __iterable0__ = featureNames;
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var feature = __iterable0__ [__index0__];
+						__accu0__.append (list ([feature, 0]));
+					}
+					return dict (__accu0__);
+				} ();
+				var myCols = function () {
+					var __accu0__ = [];
+					for (var _ = 0; _ < 12; _++) {
+						__accu0__.append (0);
+					}
+					return __accu0__;
+				} ();
+				var yourCols = function () {
+					var __accu0__ = [];
+					for (var _ = 0; _ < 12; _++) {
+						__accu0__.append (0);
+					}
+					return __accu0__;
+				} ();
+				self.permSpaces = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 8; j++) {
+						__accu0__.append (function () {
+							var __accu1__ = [];
+							for (var i = 0; i < 12; i++) {
+								__accu1__.append ('-');
+							}
+							return __accu1__;
+						} ());
+					}
+					return __accu0__;
+				} ();
+				var __iterable0__ = function () {
+					var __accu0__ = [];
+					for (var j = 0; j < 12; j++) {
+						for (var i = 0; i < 8; i++) {
+							__accu0__.append (tuple ([i, j]));
+						}
+					}
+					return __accu0__;
+				} ();
+				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+					var __left0__ = __iterable0__ [__index0__];
+					var i = __left0__ [0];
+					var j = __left0__ [1];
+					if (board [i] [j] == player.upper ()) {
+						features ['myPerm']++;
+						features ['myTotal']++;
+						self.permSpaces [i] [j] = player;
+						if (myCols [j] == 0) {
+							myCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == self.otherPlayer (player).upper ()) {
+						features ['yourPerm']++;
+						features ['yourTotal']++;
+						self.permSpaces [i] [j] = self.otherPlayer (player);
+						if (yourCols [j] == 0) {
+							yourCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == player) {
+						features ['myTotal']++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							features ['myPerm']++;
+							self.permSpaces [i] [j] = player;
+						}
+						else if (numEmptyNeighbors == 1) {
+							features ['my1Empty']++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							features ['my2Empty']++;
+						}
+						else if (numEmptyNeighbors == 3) {
+							features ['my3Empty']++;
+						}
+						else if (numEmptyNeighbors == 4) {
+							features ['my4Empty']++;
+						}
+						else if (numEmptyNeighbors == 5) {
+							features ['my5Empty']++;
+						}
+						else if (numEmptyNeighbors == 6) {
+							features ['my6Empty']++;
+						}
+						else if (numEmptyNeighbors == 7) {
+							features ['my7Empty']++;
+						}
+						else if (numEmptyNeighbors == 8) {
+							features ['my8Empty']++;
+						}
+						if (myCols [j] == 0) {
+							myCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == self.otherPlayer (player)) {
+						features ['yourTotal']++;
+						var numEmptyNeighbors = self.getNumEmptyNeighbors (i, j, board);
+						if (numEmptyNeighbors == 0) {
+							features ['yourPerm']++;
+							self.permSpaces [i] [j] = self.otherPlayer (player);
+						}
+						else if (numEmptyNeighbors == 1) {
+							features ['your1Empty']++;
+						}
+						else if (numEmptyNeighbors == 2) {
+							features ['your2Empty']++;
+						}
+						else if (numEmptyNeighbors == 3) {
+							features ['your3Empty']++;
+						}
+						else if (numEmptyNeighbors == 4) {
+							features ['your4Empty']++;
+						}
+						else if (numEmptyNeighbors == 5) {
+							features ['your5Empty']++;
+						}
+						else if (numEmptyNeighbors == 6) {
+							features ['your6Empty']++;
+						}
+						else if (numEmptyNeighbors == 7) {
+							features ['your7Empty']++;
+						}
+						else if (numEmptyNeighbors == 8) {
+							features ['your8Empty']++;
+						}
+						if (yourCols [j] == 0) {
+							yourCols [j] = 1;
+						}
+					}
+					else if (board [i] [j] == '-') {
+						var __left0__ = self.getFlipPotential (i, j, board, player);
+						var myFlip = __left0__ [0];
+						var yourFlip = __left0__ [1];
+						var flipPotential = myFlip - yourFlip;
+						if (flipPotential > 0) {
+							if (flipPotential == 1) {
+								features ['my1Flip']++;
+							}
+							else if (flipPotential == 2) {
+								features ['my2Flip']++;
+							}
+							else if (flipPotential == 3) {
+								features ['my3Flip']++;
+							}
+							else if (flipPotential >= 4) {
+								features ['my4Flip']++;
+							}
+						}
+						else if (flipPotential < 0) {
+							if (flipPotential == -(1)) {
+								features ['your1Flip']++;
+							}
+							else if (flipPotential == -(2)) {
+								features ['your2Flip']++;
+							}
+							else if (flipPotential == -(3)) {
+								features ['your3Flip']++;
+							}
+							else if (flipPotential <= -(4)) {
+								features ['your4Flip']++;
+							}
+						}
+					}
+				}
+				features ['diffPerm'] = features ['myPerm'] - features ['yourPerm'];
+				features ['diffTotal'] = features ['myTotal'] - features ['yourTotal'];
+				var features = function () {
+					var __accu0__ = [];
+					var __iterable0__ = features.py_items ();
+					for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
+						var __left0__ = __iterable0__ [__index0__];
+						var k = __left0__ [0];
+						var v = __left0__ [1];
+						__accu0__.append (list ([k, v / 96.0]));
+					}
+					return dict (__accu0__);
+				} ();
+				features ['myCols'] = sum (myCols) / 12.0;
+				features ['yourCols'] = sum (yourCols) / 12.0;
+				features ['myLongestPermPath'] = self.findLongestPermPath (board, player) / 12.0;
+				features ['yourLongestPermPath'] = self.findLongestPermPath (board, self.otherPlayer (player)) / 12.0;
+				var myLongestPath = self.findLongestPathEdges (board, player);
+				features ['myLongestPath'] = myLongestPath / 12.0;
+				features ['myLongestPathSquared'] = Math.pow (myLongestPath, 2) / 144.0;
+				var __left0__ = self.findLongestFuturePath (board, player, myLongestPath);
+				var myLongestFuturePath = __left0__ [0];
+				var myLeftFrontierFlex = __left0__ [1];
+				var myRightFrontierFlex = __left0__ [2];
+				var myPathFlex = myLeftFrontierFlex + myRightFrontierFlex;
+				features ['myLongestFuturePath'] = myLongestFuturePath / 12.0;
+				features ['myLongestFuturePathSquared'] = Math.pow (myLongestFuturePath, 2) / 144.0;
+				var myOneTurnAway = myLongestFuturePath == 12;
+				features ['myOneTurnAway'] = myOneTurnAway;
+				if (myLongestPath <= 1 || myLongestPath == 12) {
+					var blockedMe = false;
+				}
+				else if (myLeftFrontierFlex == 0 && len (self.leftEdges) > 0 && self.leftEdges [0] [1] != 0) {
+					var blockedMe = true;
+				}
+				else if (myRightFrontierFlex == 0 && len (self.rightEdges) > 0 && self.rightEdges [0] [1] != 11) {
+					var blockedMe = true;
+				}
+				else {
+					var blockedMe = false;
+				}
+				features ['blockedMe'] = blockedMe;
+				features ['myPathFlex'] = myPathFlex / 96.0;
+				var yourLongestPath = self.findLongestPathEdges (board, self.otherPlayer (player));
+				features ['yourLongestPath'] = yourLongestPath / 12.0;
+				features ['yourLongestPathSquared'] = Math.pow (yourLongestPath, 2) / 144.0;
+				var __left0__ = self.findLongestFuturePath (board, self.otherPlayer (player), yourLongestPath);
+				var yourLongestFuturePath = __left0__ [0];
+				var yourLeftFrontierFlex = __left0__ [1];
+				var yourRightFrontierFlex = __left0__ [2];
+				var yourPathFlex = yourLeftFrontierFlex + yourRightFrontierFlex;
+				features ['yourLongestFuturePath'] = yourLongestFuturePath / 12.0;
+				features ['yourLongestFuturePathSquared'] = Math.pow (yourLongestFuturePath, 2) / 144.0;
+				var yourOneTurnAway = yourLongestFuturePath == 12;
+				features ['yourOneTurnAway'] = yourOneTurnAway;
+				if (yourLongestPath <= 1 || yourLongestPath == 12) {
+					var blockedYou = false;
+				}
+				else if (yourLeftFrontierFlex == 0 && len (self.leftEdges) > 0 && self.leftEdges [0] [1] != 0) {
+					var blockedYou = true;
+				}
+				else if (yourRightFrontierFlex == 0 && len (self.rightEdges) > 0 && self.rightEdges [0] [1] != 11) {
+					var blockedYou = true;
+				}
+				else {
+					var blockedYou = false;
+				}
+				features ['blockedYou'] = blockedYou;
+				features ['yourPathFlex'] = yourPathFlex / 96.0;
+				features ['diffLongestPath'] = (myLongestPath - yourLongestPath) / 12.0;
+				features ['diffLongestFuturePath'] = (myLongestFuturePath - yourLongestFuturePath) / 12.0;
+				features ['ahead'] = myLongestPath > yourLongestPath;
+				features ['futureAhead'] = myLongestFuturePath > yourLongestFuturePath;
+				features ['onlyTurnAway'] = myOneTurnAway && !(yourOneTurnAway);
+				return features;
 			});}
 		});
 		var GameManager = __class__ ('GameManager', [object], {
@@ -4160,6 +4836,11 @@ function pathwayzGame () {
 				var action = policy (self.game, self.state);
 				self.state = game.succ (self.state, action);
 				self.displayBoard (self.coordinatesToSqNo (action));
+				var __left0__ = self.state;
+				var curBoard = __left0__ [0];
+				var curPlayer = __left0__ [1];
+				var curFeatures = game.smartFeaturesTDL (curBoard, game.otherPlayer (curPlayer));
+				print (curFeatures);
 				if (self.game.isEnd (self.state)) {
 					if (self.game.isWinner (self.state, player)) {
 						self.displayWinner (player);
@@ -4332,6 +5013,7 @@ function pathwayzGame () {
 			__all__.gameManager = gameManager;
 			__all__.initOpponentWeights = initOpponentWeights;
 			__all__.initSmartFeatureWeights = initSmartFeatureWeights;
+			__all__.initSmartOpponentWeights = initSmartOpponentWeights;
 			__all__.minimax = minimax;
 			__all__.monteCarloSearch = monteCarloSearch;
 			__all__.monteCarloTreeSearch = monteCarloTreeSearch;
