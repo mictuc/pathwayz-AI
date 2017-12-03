@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-12-02 14:24:10
+// Transcrypt'ed from Python, 2017-12-02 20:11:14
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -3243,7 +3243,7 @@ function pathwayzGame () {
 		var AVG = function (scores) {
 			var scores = sorted (scores);
 			var weightedTotal = 0;
-			for (var i = 0; i < len (scores); i++) {
+			for (var i = 0; i < min (5, len (scores)); i++) {
 				weightedTotal += scores [i] / (2 ^ i + 1);
 			}
 			return weightedTotal;
@@ -3404,7 +3404,7 @@ function pathwayzGame () {
 			return weights;
 		};
 		var initSmartOpponentWeights = function () {
-			var weights = dict ({'your2Flip': 1.056770833333335, 'myPerm': 6.885937499999994, 'your4Flip': -(0.08072916666666671), 'your6Empty': 0, 'your1Flip': 1.4874999999999974, 'myLongestPermPath': 23.88749999999985, 'my8Empty': 0, 'diffPerm': 4.184374999999997, 'myOneTurnAway': 73.15000000000013, 'onlyTurnAway': 72.65000000000016, 'your5Empty': 0, 'your8Empty': 0, 'your2Empty': -(0.24114583333333348), 'myLongestFuturePath': 35.37083333333433, 'yourCols': 2.4458333333333497, 'blockedMe': -(18.649999999999995), 'your3Empty': 0, 'diffLongestPath': 54.299999999998704, 'yourPathFlex': 0, 'yourPerm': -(2.298437500000008), 'myPathFlex': 0, 'blockedYou': 24.650000000000084, 'my5Empty': 0, 'myTotal': 6.554687500000025, 'diffTotal': 5.864062499999954, 'yourLongestPermPath': -(7.7791666666666455), 'my3Flip': 0.08385416666666674, 'my4Flip': 0.09114583333333334, 'futureAhead': 70.65000000000026, 'your1Empty': 0, 'yourLongestPathSquared': -(32.36319444444533), 'your7Empty': 0, 'my3Empty': 0, 'my1Flip': 0.9515625000000025, 'myLongestPath': 46.73333333333455, 'myCols': 24.09583333333396, 'my2Flip': -(0.18437499999999996), 'my6Empty': 0, 'my2Empty': 0.7708333333333343, 'my7Empty': 0, 'ahead': 105.34999999999832, 'your3Flip': 0.07395833333333346, 'diffLongestFuturePath': 30.291666666666504, 'myLongestFuturePathSquared': 37.923958333334184, 'my4Empty': 0, 'yourTotal': 0.19062499999999877, 'your4Empty': 0, 'yourOneTurnAway': -(57.80000000000055), 'myLongestPathSquared': 56.31250000000151, 'yourLongestFuturePath': -(1.9208333333333298), 'my1Empty': -(0.01), 'yourLongestFuturePathSquared': -(12.174652777777599), 'yourLongestPath': -(15.566666666666364)});
+			var weights = dict ({'your2Flip': 1.056770833333335, 'myPerm': 6.885937499999994, 'your4Flip': -(0.08072916666666671), 'your6Empty': 0, 'your1Flip': 1.4874999999999974, 'myLongestPermPath': 23.88749999999985, 'my8Empty': 0, 'diffPerm': 4.184374999999997, 'myOneTurnAway': 73.15000000000013, 'onlyTurnAway': 72.65000000000016, 'your5Empty': 0, 'your8Empty': 0, 'your2Empty': -(0.24114583333333348), 'myLongestFuturePath': 35.37083333333433, 'yourCols': 2.4458333333333497, 'blockedMe': -(18.649999999999995), 'your3Empty': 0, 'diffLongestPath': 54.299999999998704, 'yourPathFlex': 0, 'yourPerm': -(2.298437500000008), 'myPathFlex': 0, 'blockedYou': 24.650000000000084, 'my5Empty': 0, 'myTotal': 6.554687500000025, 'diffTotal': 5.864062499999954, 'yourLongestPermPath': -(7.7791666666666455), 'my3Flip': 0.08385416666666674, 'my4Flip': 0.09114583333333334, 'futureAhead': 70.65000000000026, 'your1Empty': 0, 'yourLongestPathSquared': -(32.36319444444533), 'your7Empty': 0, 'my3Empty': 0, 'my1Flip': 0.9515625000000025, 'myLongestPath': 46.73333333333455, 'myCols': 24.09583333333396, 'my2Flip': -(0.18437499999999996), 'my6Empty': 0, 'my2Empty': 0.7708333333333343, 'my7Empty': 0, 'ahead': 105.34999999999832, 'your3Flip': -(0.07395833333333346), 'diffLongestFuturePath': 30.291666666666504, 'myLongestFuturePathSquared': 37.923958333334184, 'my4Empty': 0, 'yourTotal': 0.19062499999999877, 'your4Empty': 0, 'yourOneTurnAway': -(57.80000000000055), 'myLongestPathSquared': 56.31250000000151, 'yourLongestFuturePath': -(1.9208333333333298), 'my1Empty': -(0.01), 'yourLongestFuturePathSquared': -(12.174652777777599), 'yourLongestPath': -(15.566666666666364)});
 			return weights;
 		};
 		var smartEvaluationFunction = function (game, board, player) {
