@@ -380,6 +380,42 @@ class PathwayzGame:
                  rowPrint += '   %c' % col
              print(rowPrint)
 
+    def countPieces(self, board, player):
+        myNumPermanents = 0
+        yourNumPermanents = 0
+        myNum1EmptyNeighbor = 0
+        yourNum1EmptyNeighbor = 0
+        myNum2EmptyNeighbor = 0
+        yourNum2EmptyNeighbor = 0
+        myNumPieces = 0
+        yourNumPieces = 0
+        for i,j in [(i, j) for j in range(12) for i in range(8)]:
+            if board[i][j] == player.upper():
+                myNumPermanents += 1
+                myNumPieces += 1
+            elif board[i][j] == self.otherPlayer(player).upper():
+                yourNumPermanents += 1
+                yourNumPieces += 1
+            elif board[i][j] == player:
+                myNumPieces += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    myNumPermanents += 1
+                elif numEmptyNeighbors == 1:
+                    myNum1EmptyNeighbor += 1
+                elif numEmptyNeighbors == 2:
+                    myNum2EmptyNeighbor += 1
+            elif board[i][j] == self.otherPlayer(player):
+                yourNumPieces += 1
+                numEmptyNeighbors = self.getNumEmptyNeighbors(i, j, board)
+                if numEmptyNeighbors == 0:
+                    yourNumPermanents += 1
+                elif numEmptyNeighbors == 1:
+                    yourNum1EmptyNeighbor += 1
+                elif numEmptyNeighbors == 2:
+                    yourNum2EmptyNeighbor += 1
+        return (myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, myNumPieces-yourNumPieces)
+
     def getFlipPotential(self, row, col, board, player):
         neighbors = self.surroundingPlaces(row, col)
         myFlipPotential = 0
@@ -648,11 +684,27 @@ def oneMoveAway(game, board, player):
             return True
     return False
 
-def beamScores(game, state, depth, beamWidth):
-    # Returns array of top beam scores 
+def oldFeatureExtractor(game, board, player):
+    # Extracts and returns features as a list
+    myLongestPath = game.longestPath(board, player)
+    yourLongestPath = game.longestPath(board, game.otherPlayer(player))
+    myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces = game.countPieces(board, player)
+    return [myLongestPath, yourLongestPath, myNumPermanents, yourNumPermanents, myNum1EmptyNeighbor, yourNum1EmptyNeighbor, myNum2EmptyNeighbor, yourNum2EmptyNeighbor, differenceNumPieces]
+
+def oldEvaluationFunction(game, board, player):
+    features = oldFeatureExtractor(game, board, player)
+    #weights = [20,-8,3,-6,-0.5,0.5,0.5,-0.5,2]
+    weights = [20,-8,3,-6,-0.2,0.2,0.1,-0.1,1]
+    #weights = [20,-8,2,-2,0,0,0,0,0]
+    results = ([i*j for (i, j) in zip(features, weights)])
+    if game.isEnd((board,player)):
+        return game.utility((board,player)) + sum(results)
+    return sum(results)
+
+def beamScores(game, state, depth, beamWidth, evalFunction):
     board, player = state
     if game.isEnd(state) or depth == 0:
-        return [(evaluationFunction(game, board, player), None, state)]
+        return [(evalFunction(game, board, player), None, state)]
     actions = shuffle(game.actions(state))
     numTopScores = beamWidth[depth-1]
     if numTopScores == None: numTopScores = len(actions)
@@ -660,19 +712,18 @@ def beamScores(game, state, depth, beamWidth):
     newStates = []
     for action in actions:
         newBoard, newPlayer = game.simulatedMove(state, action)
-        newScore = evaluationFunction(game, newBoard, player)
+        newScore = evalFunction(game, newBoard, player)
         minScore = sorted(topScores, key=lambda score: score[0])[0]
         if newScore > minScore[0]:
             topScores.remove(minScore)
             topScores.append((newScore, action, (newBoard, newPlayer)))
     newTopScores = []
     for score, action, newState in topScores:
-        _, _, lastState = sorted(beamScores(game, newState, depth-1, beamWidth), key=lambda score: score[0], reverse=True)[0]
-        newTopScores.append((evaluationFunction(game, lastState[0], player), action, lastState))
+        _, _, lastState = sorted(beamScores(game, newState, depth-1, beamWidth, evalFunction), key=lambda score: score[0], reverse=True)[0]
+        newTopScores.append((evalFunction(game, lastState[0], player), action, lastState))
     return newTopScores
 
 def beamMinimax(game, state):
-    # Returns beam minimax move
     board, player = state
     if oneMoveAway(game, board, game.otherPlayer(player)):
         depth = 2
@@ -680,7 +731,7 @@ def beamMinimax(game, state):
     else:
         depth = 3
         beamWidth = [1, 5, 15]
-    scores = beamScores(game, state, depth, beamWidth)
+    scores = beamScores(game, state, depth, beamWidth, oldEvaluationFunction)
     _, bestMove, _ = sorted(scores, key=lambda score: score[0], reverse=True)[0]
     return bestMove
 
@@ -706,8 +757,9 @@ class smartPAI:
 
     def updateWeights(self, game, player, oldBoard, newBoard):
         # Updates weights of PAI
-        eta = 0.001
+        #eta = 0.0001
         #eta = 0.0005
+        eta = 0.001
         oldScore = self.evaluationFunction(game, oldBoard, player)
         newScore = self.evaluationFunction(game, newBoard, player)
         features = game.smartFeatures(oldBoard, player)
@@ -726,12 +778,14 @@ class smartPAI:
             scores.append((score, action))
         sortedScores = sorted(scores, key=lambda score: score[0], reverse=True)
         
+        """
         epsilon = random.uniform(0, epsMax)
         for i in range(min(5, len(sortedScores))):
             if epsilon <= (2**(i+1) - 1) / float(2**(i+1)):
                 #print i
                 chosenScore, chosenAction = sortedScores[i]
                 return chosenAction
+        """
 
         bestScore, bestAction = sortedScores[0]
         return bestAction
@@ -743,9 +797,10 @@ def playGame(game, PAI1, PAI1_starts, opponent, maxEpsilon):
         myTurn = game.startState()
     else:
         yourTurn = game.startState()
-        myTurn = game.succ(yourTurn, opponent.epsilonMove(game, yourTurn, maxEpsilon))
+        myTurn = game.succ(yourTurn, beamMinimax(game, yourTurn))
 
     while not (game.isEnd(myTurn)):
+        #game.printBoard(myTurn)
         """
         print "MY TURN"
         game.printBoard(myTurn)
@@ -775,11 +830,12 @@ def playGame(game, PAI1, PAI1_starts, opponent, maxEpsilon):
             PAI1.updateWeights(game, myTurn[1], myTurn[0], yourTurn[0])
             endState = yourTurn
             break
-        myNextTurn = game.succ(yourTurn, opponent.epsilonMove(game, yourTurn, maxEpsilon))
+        myNextTurn = game.succ(yourTurn, beamMinimax(game, yourTurn))
         PAI1.updateWeights(game, myTurn[1], myTurn[0], myNextTurn[0])
         myTurn = myNextTurn
         endState = myTurn
 
+    #game.printBoard(endState)
     if game.fullBoard(endState):
         return None
     elif game.isWinner(endState, 'w'):
@@ -787,7 +843,7 @@ def playGame(game, PAI1, PAI1_starts, opponent, maxEpsilon):
     else:
         return 'b'
 
-PAI = smartPAI(weightFile='smartPathPAI_v_smartPathPAI_winRate0.56_game250.txt')
+PAI = smartPAI(weightFile='smartPathPAI_v_beamMinimax_winRate0.20_game80_modified.txt')
 opponent = smartPAI(weightFile='handpicked_path_weights.txt')
 maxEpsilon = 1
 # chooses randomly (weighted) among top 10 moves
@@ -831,14 +887,15 @@ for i in range(numGames):
         print "PAI's current win rate: %f" % (winRate)
         print 'Played %d games in %s seconds' % (numGamesPlayed, time.time() - start_time)
 
-    if (i%50) == 0 and i != 0:
+    if (i%20) == 0 and i != 0:
         print "-----------------"
         #print '50 games were played in %s seconds' % time
         print "Writing file..."
-        fileName = 'smartPathPAI_v_smartPathPAI_winRate%.2f_game%d.txt' % (winRate, i+250)
+        fileName = 'smarterPathPAI_v_beamMinimax_winRate%.2f_game%d.txt' % (winRate, i+80)
         f = open(fileName, 'w')
         json.dump(PAI.weights, f)
         f.close()
+        """
         if winRate >= 0.60:
             print "Updating to better opponent..."
             opponent = smartPAI(weightFile=fileName)
@@ -851,6 +908,7 @@ for i in range(numGames):
         elif winRate <= 0.40:
             print "Updating to advanced baseline opponent..."
             opponent = smartPAI(weightFile='adv_baseline_weights.txt')
+        """
         
         print "-----------------"
         wins['PAI'] = 0
