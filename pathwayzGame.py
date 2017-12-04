@@ -236,7 +236,7 @@ def value(game, state, depth, alpha, beta, originalPlayer):
         if originalPlayer:
             return evaluationFunction(game, board, player)
         else:
-            return -evaluationFunction(game, board, player)
+            return evaluationFunction(game, board, game.otherPlayer(player))
     elif originalPlayer:
         highestScore = -float('inf')
         for action in game.actions(state):
@@ -387,21 +387,26 @@ def valueExpectimax(game, state, depth, originalPlayer):
     board, player = state
     if game.isEnd(state) or depth == 0:
         if originalPlayer:
-            return evaluationFunction(game, board, player)
+            return TDLevaluationFunction(game, board, player)
         else:
-            return -evaluationFunction(game, board, game.otherPlayer(player))
+            return TDLevaluationFunction(game, board, game.otherPlayer(player))
     elif originalPlayer:
         highestScore = -float('inf')
         for action in game.actions(state):
-            score = value(game, game.simulatedMove(state, action), depth-1, False)
+            score = valueExpectimax(game, game.simulatedMove(state, action), depth-1, False)
             highestScore = MAX([highestScore, score])
         return highestScore
     else:
         scores = []
         for action in game.actions(state):
-            score = value(game, game.simulatedMove(state, action), depth-1, True)
+            score = valueExpectimax(game, game.simulatedMove(state, action), depth-1, True)
             scores.append(score)
-        expectedScore = AVG(scores)
+        sortedScores = sorted(scores, reverse=True)
+        #print(sortedScores)
+        expectedScore = 0
+        for i in range(min(5, len(sortedScores))):
+            expectedScore += sortedScores[i]
+        expectedScore = expectedScore / 5.0
         return expectedScore
 
 def advancedExpectimax(game, state):
@@ -413,6 +418,7 @@ def advancedExpectimax(game, state):
     legalMoves = game.actions(state)
     piecesPlayed = 96 - 0.5 * len(legalMoves)
     depth = int(piecesPlayed / 20)
+    #depth = 2
     #print(depth)
     scores = [valueExpectimax(game, game.simulatedMove((tempBoard, player), action), depth, False) for action in legalMoves]
     bestScore = MAX(scores)
@@ -488,7 +494,7 @@ def initOpponentWeights():
 
 def initSmartOpponentWeights():
     #weights = dict(float)
-    weights = {"your2Flip": 1.0495833333333353, "myPerm": 6.816041666666664, "your4Flip": -0.08072916666666671, "your6Empty": 0, "your1Flip": 1.4491666666666643, "myLongestPermPath": 23.74083333333318, "my8Empty": 0, "diffPerm": 4.216770833333327, "myOneTurnAway": 73.14000000000013, "onlyTurnAway": 72.76000000000022, "your5Empty": 0, "your8Empty": 0, "your2Empty": -0.2548958333333335, "myLongestFuturePath": 34.98666666666767, "yourCols": -0.9458333333333613, "blockedMe": -18.720000000000006, "your3Empty": 0, "diffLongestPath": 54.54749999999867, "yourPathFlex": 0, "yourPerm": -2.4007291666666766, "myPathFlex": 0, "blockedYou": 24.70000000000009, "my5Empty": 0, "myTotal": 6.449583333333361, "diffTotal": 5.901354166666625, "yourLongestPermPath": -8.06666666666665, "yourLongestPath": -16.090833333333034, "my4Flip": 0.09114583333333334, "futureAhead": 70.76000000000032, "your1Empty": 0.001, "yourLongestPathSquared": -32.91201388888965, "your7Empty": 0, "my3Empty": -0.007187499999999994, "my1Flip": 0.913333333333336, "myLongestPath": 46.45666666666782, "myCols": 23.67250000000069, "my2Flip": -0.19406249999999978, "my6Empty": 0, "my2Empty": 0.7627083333333332, "my7Empty": 0, "ahead": 105.5099999999984, "your3Flip": -0.01, "diffLongestFuturePath": 30.42083333333315, "myLongestFuturePathSquared": 37.61263888888979, "my4Empty": 0, "yourTotal": 0, "your4Empty": -0.004687499999999997, "yourOneTurnAway": -58.40000000000043, "myLongestPathSquared": 56.155833333334826, "yourLongestFuturePath": -2.4341666666666524, "my1Empty": -0.02208333333333334, "yourLongestFuturePathSquared": -12.705347222222025, "my3Flip": 0.08260416666666671}
+    weights = {"your2Flip": 1.0495833333333353, "myPerm": 6.816041666666664, "your4Flip": -0.08072916666666671, "your6Empty": 0, "your1Flip": 1.4491666666666643, "myLongestPermPath": 23.74083333333318, "my8Empty": 0, "diffPerm": 4.216770833333327, "myOneTurnAway": 73.14000000000013, "onlyTurnAway": 72.76000000000022, "your5Empty": 0, "your8Empty": 0, "your2Empty": -0.2548958333333335, "myLongestFuturePath": 34.98666666666767, "yourCols": -0.9458333333333613, "blockedMe": -18.720000000000006, "your3Empty": 0, "diffLongestPath": 54.54749999999867, "yourPathFlex": 0, "yourPerm": -2.4007291666666766, "myPathFlex": 0, "blockedYou": 24.70000000000009, "my5Empty": 0, "myTotal": 6.449583333333361, "diffTotal": 5.901354166666625, "yourLongestPermPath": -8.06666666666665, "yourLongestPath": -16.090833333333034, "my4Flip": 0.09114583333333334, "futureAhead": 70.76000000000032, "your1Empty": 0.001, "yourLongestPathSquared": -32.91201388888965, "your7Empty": 0, "my3Empty": -0.007187499999999994, "my1Flip": 0.913333333333336, "myLongestPath": 46.45666666666782, "myCols": 23.67250000000069, "my2Flip": -0.19406249999999978, "my6Empty": 0, "my2Empty": 0.7627083333333332, "my7Empty": 0, "ahead": 105.5099999999984, "your3Flip": -0.01, "diffLongestFuturePath": 30.42083333333315, "myLongestFuturePathSquared": 37.61263888888979, "my4Empty": 0, "yourTotal": 0, "your4Empty": -0.004687499999999997, "yourOneTurnAway": -1000.0, "myLongestPathSquared": 56.155833333334826, "yourLongestFuturePath": -2.4341666666666524, "my1Empty": -0.02208333333333334, "yourLongestFuturePathSquared": -12.705347222222025, "my3Flip": 0.08260416666666671}
     return weights
 
 def smartEvaluationFunction(game, board, player):

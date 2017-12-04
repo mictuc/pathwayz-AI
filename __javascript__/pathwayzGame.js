@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-12-03 11:45:30
+// Transcrypt'ed from Python, 2017-12-03 17:23:42
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -2973,7 +2973,7 @@ function pathwayzGame () {
 					return evaluationFunction (game, board, player);
 				}
 				else {
-					return -(evaluationFunction (game, board, player));
+					return evaluationFunction (game, board, game.otherPlayer (player));
 				}
 			}
 			else if (originalPlayer) {
@@ -3187,7 +3187,7 @@ function pathwayzGame () {
 			}
 			else {
 				var depth = 3;
-				var beamWidth = list ([1, 5, 15]);
+				var beamWidth = list ([1, 5, 10]);
 			}
 			var scores = beamScores (game, state, depth, beamWidth, evaluationFunction);
 			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
@@ -3208,7 +3208,7 @@ function pathwayzGame () {
 			}
 			else {
 				var depth = 3;
-				var beamWidth = list ([1, 5, 15]);
+				var beamWidth = list ([1, 5, 10]);
 			}
 			var scores = beamScores (game, state, depth, beamWidth, smartEvaluationFunction);
 			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
@@ -3229,7 +3229,7 @@ function pathwayzGame () {
 			}
 			else {
 				var depth = 3;
-				var beamWidth = list ([1, 5, 15]);
+				var beamWidth = list ([1, 5, 10]);
 			}
 			var scores = beamScores (game, state, depth, beamWidth, TDLevaluationFunction);
 			var __left0__ = sorted (scores, __kwargtrans__ ({key: (function __lambda__ (score) {
@@ -3254,10 +3254,10 @@ function pathwayzGame () {
 			var player = __left0__ [1];
 			if (game.isEnd (state) || depth == 0) {
 				if (originalPlayer) {
-					return evaluationFunction (game, board, player);
+					return TDLevaluationFunction (game, board, player);
 				}
 				else {
-					return -(evaluationFunction (game, board, game.otherPlayer (player)));
+					return TDLevaluationFunction (game, board, game.otherPlayer (player));
 				}
 			}
 			else if (originalPlayer) {
@@ -3265,7 +3265,7 @@ function pathwayzGame () {
 				var __iterable0__ = game.actions (state);
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var action = __iterable0__ [__index0__];
-					var score = value (game, game.simulatedMove (state, action), depth - 1, false);
+					var score = valueExpectimax (game, game.simulatedMove (state, action), depth - 1, false);
 					var highestScore = MAX (list ([highestScore, score]));
 				}
 				return highestScore;
@@ -3275,10 +3275,15 @@ function pathwayzGame () {
 				var __iterable0__ = game.actions (state);
 				for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
 					var action = __iterable0__ [__index0__];
-					var score = value (game, game.simulatedMove (state, action), depth - 1, true);
+					var score = valueExpectimax (game, game.simulatedMove (state, action), depth - 1, true);
 					scores.append (score);
 				}
-				var expectedScore = AVG (scores);
+				var sortedScores = sorted (scores, __kwargtrans__ ({reverse: true}));
+				var expectedScore = 0;
+				for (var i = 0; i < min (5, len (sortedScores)); i++) {
+					expectedScore += sortedScores [i];
+				}
+				var expectedScore = expectedScore / 5.0;
 				return expectedScore;
 			}
 		};
@@ -3404,7 +3409,7 @@ function pathwayzGame () {
 			return weights;
 		};
 		var initSmartOpponentWeights = function () {
-			var weights = dict ({'your2Flip': 1.056770833333335, 'myPerm': 6.885937499999994, 'your4Flip': -(0.08072916666666671), 'your6Empty': 0, 'your1Flip': 1.4874999999999974, 'myLongestPermPath': 23.88749999999985, 'my8Empty': 0, 'diffPerm': 4.184374999999997, 'myOneTurnAway': 73.15000000000013, 'onlyTurnAway': 72.65000000000016, 'your5Empty': 0, 'your8Empty': 0, 'your2Empty': -(0.24114583333333348), 'myLongestFuturePath': 35.37083333333433, 'yourCols': 2.4458333333333497, 'blockedMe': -(18.649999999999995), 'your3Empty': 0, 'diffLongestPath': 54.299999999998704, 'yourPathFlex': 0, 'yourPerm': -(2.298437500000008), 'myPathFlex': 0, 'blockedYou': 24.650000000000084, 'my5Empty': 0, 'myTotal': 6.554687500000025, 'diffTotal': 5.864062499999954, 'yourLongestPermPath': -(7.7791666666666455), 'my3Flip': 0.08385416666666674, 'my4Flip': 0.09114583333333334, 'futureAhead': 70.65000000000026, 'your1Empty': 0, 'yourLongestPathSquared': -(32.36319444444533), 'your7Empty': 0, 'my3Empty': 0, 'my1Flip': 0.9515625000000025, 'myLongestPath': 46.73333333333455, 'myCols': 24.09583333333396, 'my2Flip': -(0.18437499999999996), 'my6Empty': 0, 'my2Empty': 0.7708333333333343, 'my7Empty': 0, 'ahead': 105.34999999999832, 'your3Flip': -(0.07395833333333346), 'diffLongestFuturePath': 30.291666666666504, 'myLongestFuturePathSquared': 37.923958333334184, 'my4Empty': 0, 'yourTotal': 0.19062499999999877, 'your4Empty': 0, 'yourOneTurnAway': -(57.80000000000055), 'myLongestPathSquared': 56.31250000000151, 'yourLongestFuturePath': -(1.9208333333333298), 'my1Empty': -(0.01), 'yourLongestFuturePathSquared': -(12.174652777777599), 'yourLongestPath': -(15.566666666666364)});
+			var weights = dict ({'your2Flip': 1.0495833333333353, 'myPerm': 6.816041666666664, 'your4Flip': -(0.08072916666666671), 'your6Empty': 0, 'your1Flip': 1.4491666666666643, 'myLongestPermPath': 23.74083333333318, 'my8Empty': 0, 'diffPerm': 4.216770833333327, 'myOneTurnAway': 73.14000000000013, 'onlyTurnAway': 72.76000000000022, 'your5Empty': 0, 'your8Empty': 0, 'your2Empty': -(0.2548958333333335), 'myLongestFuturePath': 34.98666666666767, 'yourCols': -(0.9458333333333613), 'blockedMe': -(18.720000000000006), 'your3Empty': 0, 'diffLongestPath': 54.54749999999867, 'yourPathFlex': 0, 'yourPerm': -(2.4007291666666766), 'myPathFlex': 0, 'blockedYou': 24.70000000000009, 'my5Empty': 0, 'myTotal': 6.449583333333361, 'diffTotal': 5.901354166666625, 'yourLongestPermPath': -(8.06666666666665), 'yourLongestPath': -(16.090833333333034), 'my4Flip': 0.09114583333333334, 'futureAhead': 70.76000000000032, 'your1Empty': 0.001, 'yourLongestPathSquared': -(32.91201388888965), 'your7Empty': 0, 'my3Empty': -(0.007187499999999994), 'my1Flip': 0.913333333333336, 'myLongestPath': 46.45666666666782, 'myCols': 23.67250000000069, 'my2Flip': -(0.19406249999999978), 'my6Empty': 0, 'my2Empty': 0.7627083333333332, 'my7Empty': 0, 'ahead': 105.5099999999984, 'your3Flip': -(0.01), 'diffLongestFuturePath': 30.42083333333315, 'myLongestFuturePathSquared': 37.61263888888979, 'my4Empty': 0, 'yourTotal': 0, 'your4Empty': -(0.004687499999999997), 'yourOneTurnAway': -(1000.0), 'myLongestPathSquared': 56.155833333334826, 'yourLongestFuturePath': -(2.4341666666666524), 'my1Empty': -(0.02208333333333334), 'yourLongestFuturePathSquared': -(12.705347222222025), 'my3Flip': 0.08260416666666671});
 			return weights;
 		};
 		var smartEvaluationFunction = function (game, board, player) {
