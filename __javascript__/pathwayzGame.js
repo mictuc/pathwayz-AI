@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2017-12-03 17:23:42
+// Transcrypt'ed from Python, 2017-12-05 09:13:38
 function pathwayzGame () {
    var __symbols__ = ['__py3.6__', '__esv5__'];
     var __all__ = {};
@@ -396,9 +396,7 @@ function pathwayzGame () {
 					var map = function (func, iterable) {
 						return function () {
 							var __accu0__ = [];
-							var __iterable0__ = iterable;
-							for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-								var item = __iterable0__ [__index0__];
+							for (var item of iterable) {
 								__accu0__.append (func (item));
 							}
 							return __accu0__;
@@ -410,9 +408,7 @@ function pathwayzGame () {
 						}
 						return function () {
 							var __accu0__ = [];
-							var __iterable0__ = iterable;
-							for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-								var item = __iterable0__ [__index0__];
+							for (var item of iterable) {
 								if (func (item)) {
 									__accu0__.append (item);
 								}
@@ -458,9 +454,7 @@ function pathwayzGame () {
 							}
 							self.buffer = '{}{}{}'.format (self.buffer, sep.join (function () {
 								var __accu0__ = [];
-								var __iterable0__ = args;
-								for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-									var arg = __iterable0__ [__index0__];
+								for (var arg of args) {
 									__accu0__.append (str (arg));
 								}
 								return __accu0__;
@@ -472,9 +466,7 @@ function pathwayzGame () {
 							else {
 								console.log (sep.join (function () {
 									var __accu0__ = [];
-									var __iterable0__ = args;
-									for (var __index0__ = 0; __index0__ < __iterable0__.length; __index0__++) {
-										var arg = __iterable0__ [__index0__];
+									for (var arg of args) {
 										__accu0__.append (str (arg));
 									}
 									return __accu0__;
@@ -4965,7 +4957,7 @@ function pathwayzGame () {
 			});},
 			get setStartMenuText () {return __get__ (this, function (self) {
 				document.getElementById ('modaltitle').innerHTML = 'Setup Game';
-				document.getElementById ('modalInformation').innerHTML = '<h2>Player 1</h2><br><select class="soflow" id="player1"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type="text" style="display: inline;" id="player1name" value="Player 1"><br><h2>Player 2</h2><br><select class="soflow" id="player2"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type="text" style="display: inline;" id="player2name" value="Player 2"><br><a href="#" onclick="closeModal(); pathwayzGame.gameManager.setPlayers();">Start Game</a></div>';
+				document.getElementById ('modalInformation').innerHTML = '<h2>Player 1</h2><br><select class="soflow" id="player1"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Features</option><option>PAI Advanced Features</option><option>PAI TDL</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI TDL Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type="text" style="display: inline;" id="player1name" value="Player 1"><br><h2>Player 2</h2><br><select class="soflow" id="player2"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Features</option><option>PAI Advanced Features</option><option>PAI TDL</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI TDL Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type="text" style="display: inline;" id="player2name" value="Player 2"><br><a href="#" onclick="closeModal(); pathwayzGame.gameManager.setPlayers();">Start Game</a></div>';
 			});},
 			get displayWinner () {return __get__ (this, function (self, player) {
 				self.setWinText (player);

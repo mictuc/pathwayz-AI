@@ -1014,20 +1014,20 @@ class PathwayzGame:
                     if j < self.leftCol:
                         self.leftCol = j
                     self.findPathFromSquare(board, player, i, j)
-    
+
     def findLongestFuturePath(self, board, player, longestPath):
         longestFuturePath = longestPath
         #numPathMoves = 0
         leftFrontierMoves = 0
         rightFrontierMoves = 0
         leftFrontierPlaces, rightFrontierPlaces, leftFrontierFlips, rightFrontierFlips = self.findFrontierMoves(board, player)
-        
+
         for frontier in leftFrontierPlaces:
             self.alreadyChecked = [[False for x in range(12)] for y in range(8)]
             i, j = frontier
             self.leftCol = j
             self.rightCol = j
-            self.findPathFromSquare(board, player, i, j) 
+            self.findPathFromSquare(board, player, i, j)
             futurePath = self.rightCol - self.leftCol + 1
             if futurePath > longestPath:
                 #numPathMoves += 1
@@ -1040,7 +1040,7 @@ class PathwayzGame:
             i, j = frontier
             self.leftCol = j
             self.rightCol = j
-            self.findPathFromSquare(board, player, i, j) 
+            self.findPathFromSquare(board, player, i, j)
             futurePath = self.rightCol - self.leftCol + 1
             if futurePath > longestPath:
                 #numPathMoves += 1
@@ -1049,7 +1049,7 @@ class PathwayzGame:
                     longestFuturePath = futurePath
 
         alreadyFlipped = [[False for x in range(12)] for y in range(8)]
-        
+
         for frontier in leftFrontierFlips:
             i, j = frontier
             for row,col  in self.surroundingPlaces(i, j):
@@ -1187,7 +1187,7 @@ class PathwayzGame:
 
         myLongestPath = self.findLongestPathEdges(board, player)
         features['myLongestPath'] = myLongestPath / 12.0
-        features['myLongestPathSquared'] = myLongestPath**2 / 144.0   
+        features['myLongestPathSquared'] = myLongestPath**2 / 144.0
         myLongestFuturePath, myLeftFrontierFlex, myRightFrontierFlex = self.findLongestFuturePath(board, player, myLongestPath)
         myPathFlex = myLeftFrontierFlex + myRightFrontierFlex
         features['myLongestFuturePath'] = myLongestFuturePath / 12.0
@@ -1362,7 +1362,7 @@ class GameManager():
     def setStartMenuText(self):
         # Sets modal up for start menu
         document.getElementById("modaltitle").innerHTML = "Setup Game";
-        document.getElementById("modalInformation").innerHTML = "<h2>Player 1</h2><br><select class=\"soflow\" id=\"player1\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type=\"text\" style=\"display: inline;\" id=\"player1name\" value=\"Player 1\"><br><h2>Player 2</h2><br><select class=\"soflow\" id=\"player2\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type=\"text\" style=\"display: inline;\" id=\"player2name\" value=\"Player 2\"><br><a href=\"#\" onclick=\"closeModal(); pathwayzGame.gameManager.setPlayers();\">Start Game</a></div>";
+        document.getElementById("modalInformation").innerHTML = "<h2>Player 1</h2><br><select class=\"soflow\" id=\"player1\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Features</option><option>PAI Advanced Features</option><option>PAI TDL</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI TDL Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type=\"text\" style=\"display: inline;\" id=\"player1name\" value=\"Player 1\"><br><h2>Player 2</h2><br><select class=\"soflow\" id=\"player2\"><option>Human</option><option>PAI Random</option><option>PAI Baseline</option><option>PAI Advanced Baseline</option><option>PAI Features</option><option>PAI Advanced Features</option><option>PAI TDL</option><option>PAI Minimax</option><option>PAI Beam Minimax</option><option>PAI Advanced Beam Minimax</option><option>PAI TDL Beam Minimax</option><option>PAI Expectimax</option><option>PAI MCS</option><option>PAI MCTS</option></select><input type=\"text\" style=\"display: inline;\" id=\"player2name\" value=\"Player 2\"><br><a href=\"#\" onclick=\"closeModal(); pathwayzGame.gameManager.setPlayers();\">Start Game</a></div>";
 
     def displayWinner(self, player):
         # Displays winner modal in the GUI
