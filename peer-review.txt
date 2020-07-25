@@ -1,0 +1,9 @@
+Q-learning for Super Mario Bros was really cool in that they were able to get
+Mario to complete the level in only a couple hundred games.
+
+Dominating at Dominion was fascinating as they were able to use reinforcement
+learning to develop Dominion strategies and eventually come up with similar
+strategies to humans.
+
+Comparing Learning Algorithms for Crossy Road was fun as they were successfully
+able to be significantly better than humans in the game.
